@@ -1,0 +1,220 @@
+@model HEMS.Models.ConfigurationValidationResult
+@{
+    ViewBag.Title = "Configuration Validation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h1>Configuration Validation</h1>
+                <p class="lead">System configuration validation results</p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel @(Model.IsValid ? "panel-success" : "panel-danger")">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <i class="glyphicon @(Model.IsValid ? "glyphicon-ok" : "glyphicon-remove")"></i>
+                                Validation Summary
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h2 class="@(Model.IsValid ? "text-success" : "text-danger")">
+                                            @(Model.IsValid ? "VALID" : "INVALID")
+                                        </h2>
+                                        <p class="text-muted">Overall Status</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h2 class="text-danger">@Model.ErrorCount</h2>
+                                        <p class="text-muted">Errors</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h2 class="text-warning">@Model.WarningCount</h2>
+                                        <p class="text-muted">Warnings</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-primary" onclick="revalidate()">
+                                            <i class="glyphicon glyphicon-refresh"></i> Re-validate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.HasErrors)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-danger">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    <i class="glyphicon glyphicon-exclamation-sign"></i>
+                                    Configuration Errors (@Model.ErrorCount)
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <p class="text-danger">
+                                    <strong>The following errors must be resolved before the system can operate correctly:</strong>
+                                </p>
+                                <ul class="list-group">
+                                    @foreach (var error in Model.Errors)
+                                    {
+                                        <li class="list-group-item list-group-item-danger">
+                                            <i class="glyphicon glyphicon-remove"></i>
+                                            @error
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (Model.HasWarnings)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-warning">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    <i class="glyphicon glyphicon-warning-sign"></i>
+                                    Configuration Warnings (@Model.WarningCount)
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <p class="text-warning">
+                                    <strong>The following warnings should be reviewed:</strong>
+                                </p>
+                                <ul class="list-group">
+                                    @foreach (var warning in Model.Warnings)
+                                    {
+                                        <li class="list-group-item list-group-item-warning">
+                                            <i class="glyphicon glyphicon-warning-sign"></i>
+                                            @warning
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (Model.IsValid && !Model.HasWarnings)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-success">
+                            <div class="panel-body text-center">
+                                <h3 class="text-success">
+                                    <i class="glyphicon glyphicon-ok-circle"></i>
+                                    Configuration is Valid
+                                </h3>
+                                <p class="lead">All configuration settings have been validated successfully.</p>
+                                <p>The system is properly configured and ready for operation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Validation Details</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p><strong>Validation performed on:</strong> @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                            <p><strong>Validation includes:</strong></p>
+                            <ul>
+                                <li>Database connectivity and schema validation</li>
+                                <li>Environment-specific settings verification</li>
+                                <li>Security configuration review</li>
+                                <li>File system permissions check</li>
+                                <li>IIS configuration validation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Actions</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="btn-group" role="group">
+                                <a href="@Url.Action("Index", "Configuration")" class="btn btn-default">
+                                    <i class="glyphicon glyphicon-arrow-left"></i> Back to Configuration
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="revalidate()">
+                                    <i class="glyphicon glyphicon-refresh"></i> Re-validate
+                                </button>
+                                <button type="button" class="btn btn-info" onclick="exportValidationReport()">
+                                    <i class="glyphicon glyphicon-download-alt"></i> Export Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function revalidate() {
+        window.location.reload();
+    }
+
+    function exportValidationReport() {
+        $.ajax({
+            url: '@Url.Action("ValidateConfiguration", "Configuration")',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    var report = {
+                        timestamp: new Date().toISOString(),
+                        isValid: response.isValid,
+                        errorCount: response.errorCount,
+                        warningCount: response.warningCount,
+                        errors: response.errors,
+                        warnings: response.warnings
+                    };
+                    
+                    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+                    var downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "hems-validation-report.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                } else {
+                    alert('Failed to export validation report: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Failed to export validation report');
+            }
+        });
+    }
+</script>

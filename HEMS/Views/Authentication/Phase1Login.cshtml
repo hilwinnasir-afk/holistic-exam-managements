@@ -1,0 +1,96 @@
+@model HEMS.Models.ViewModels.Phase1LoginViewModel
+@{
+    ViewBag.Title = "Phase 1 Login - Identity Verification";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">Phase 1 Login</h3>
+                    <p class="text-center mb-0 mt-2 opacity-75">Identity Verification</p>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage))
+                    {
+                        <div class="alert alert-info">
+                            @ViewBag.InfoMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            @Model.ErrorMessage
+                            
+                            @if (ViewBag.LockoutEndTime != null)
+                            {
+                                <br /><small><strong>Account will be unlocked at:</strong> @ViewBag.LockoutEndTime</small>
+                            }
+                            
+                            @if (ViewBag.FailedAttemptCount != null && ViewBag.FailedAttemptCount > 0)
+                            {
+                                <br /><small><strong>Failed attempts:</strong> @ViewBag.FailedAttemptCount out of @HEMS.Models.PasswordPolicy.MaxFailedAttempts</small>
+                            }
+                        </div>
+                    }
+
+                    @* Debug information for development *@
+                    @if (ViewBag.DebugInfo != null)
+                    {
+                        <div class="alert alert-warning">
+                            <strong>Debug Info:</strong> @ViewBag.DebugInfo
+                        </div>
+                    }
+
+                    <div class="alert alert-info">
+                        <strong>Instructions:</strong>
+                        <ul class="mb-0">
+                            <li>Use your university email address</li>
+                            <li>Password format: First 4 characters of Student ID + "18"</li>
+                            <li>Example: If your ID is "SE123456", password is "SE1218"</li>
+                            <li>Phase 1 login can only be used once</li>
+                        </ul>
+                    </div>
+
+                    @using (Html.BeginForm("Phase1Login", "Authentication", FormMethod.Post, new { @class = "form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="form-group mb-3">
+                            @Html.LabelFor(m => m.Email, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "student@university.edu.et", type = "email" })
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group mb-4">
+                            @Html.LabelFor(m => m.Password, new { @class = "form-label" })
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter calculated password" })
+                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> Login to Phase 1
+                            </button>
+                        </div>
+                    }
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Need help? Contact your coordinator for assistance.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+}

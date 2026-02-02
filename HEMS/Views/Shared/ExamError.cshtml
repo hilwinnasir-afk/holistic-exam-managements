@@ -1,0 +1,126 @@
+@model HEMS.Models.ExamAccessError
+@{
+    ViewBag.Title = "Exam Access Issue";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h4 class="mb-0">Exam Access Issue</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Main Error Message -->
+                    <div class="alert alert-danger border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-circle me-3 mt-1 text-danger"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">@Model.UserFriendlyMessage</h5>
+                                @if (!string.IsNullOrEmpty(Model.SuggestedAction))
+                                {
+                                    <p class="mb-0">@Model.SuggestedAction</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        @if (Model.ShowRetryOption)
+                        {
+                            <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                                <i class="fas fa-redo me-2"></i>Try Again
+                            </button>
+                        }
+                        
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Contact Information -->
+                    @if (Model.ShowContactSupport && !string.IsNullOrEmpty(Model.ContactInfo))
+                    {
+                        <div class="alert alert-info border-0">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle me-3 mt-1 text-info"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Need Help?</h6>
+                                    <p class="mb-0">@Model.ContactInfo</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Additional Information -->
+                    @if (Model.AdditionalData != null && Model.AdditionalData.Any())
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-3">Additional Information:</h6>
+                            <div class="bg-light p-3 rounded">
+                                @foreach (var item in Model.AdditionalData)
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted">@item.Key:</div>
+                                        <div class="col-8">@item.Value</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Error occurred at @Model.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-refresh for certain error types -->
+@if (Model.ErrorType == HEMS.Models.ExamAccessErrorType.ServiceUnavailable || 
+     Model.ErrorType == HEMS.Models.ExamAccessErrorType.DatabaseConnectivityError ||
+     Model.ErrorType == HEMS.Models.ExamAccessErrorType.InsufficientResources)
+{
+    <script>
+        // Auto-refresh after 30 seconds for system issues
+        setTimeout(function() {
+            if (confirm('The system may be available now. Would you like to try again?')) {
+                window.location.reload();
+            }
+        }, 30000);
+    </script>
+}
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+</style>

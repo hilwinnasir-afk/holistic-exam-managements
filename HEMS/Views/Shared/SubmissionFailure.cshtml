@@ -1,0 +1,183 @@
+@{
+    ViewBag.Title = "Submission Failure";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <i class="fas fa-upload fa-2x mb-2"></i>
+                    <h4 class="mb-0">Exam Submission Failure</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Critical Error Message -->
+                    <div class="alert alert-danger border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-circle me-3 mt-1 text-danger"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">Unable to submit your exam</h5>
+                                <p class="mb-0">There was a critical error while trying to submit your exam. Your answers are safe.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Immediate Actions -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">IMPORTANT - DO NOT PANIC</h6>
+                                <ol class="mb-0 ps-3">
+                                    <li><strong>DO NOT</strong> close your browser or refresh the page</li>
+                                    <li><strong>IMMEDIATELY</strong> notify your exam coordinator</li>
+                                    <li><strong>REMAIN</strong> calm - your answers are saved</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Safety Assurance -->
+                    <div class="mb-4">
+                        <h6 class="text-success mb-3">
+                            <i class="fas fa-shield-alt me-2"></i>Your Answers Are Safe
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                All your answers have been automatically saved throughout the exam
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Your exam progress is completely preserved
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                No answers will be lost due to this submission error
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Retry Options -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="button" class="btn btn-primary" onclick="attemptResubmission()">
+                            <i class="fas fa-redo me-2"></i>Try Submitting Again
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-warning" onclick="contactCoordinator()">
+                            <i class="fas fa-phone me-2"></i>Contact Coordinator Now
+                        </button>
+                    </div>
+
+                    <!-- Submission Status -->
+                    @if (ViewBag.SubmissionAttempts != null)
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Submission Status:</h6>
+                            <div class="bg-light p-3 rounded">
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Attempts Made:</div>
+                                    <div class="col-8">@ViewBag.SubmissionAttempts</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Last Attempt:</div>
+                                    <div class="col-8">@DateTime.Now.ToString("HH:mm:ss")</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 text-muted">Error Type:</div>
+                                    <div class="col-8">@(ViewBag.ErrorType ?? "Submission Processing Error")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Coordinator Instructions -->
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-user-tie me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">For Exam Coordinators</h6>
+                                <p class="mb-2">This student cannot submit their exam due to a system error:</p>
+                                <ul class="mb-0 ps-3">
+                                    <li>All student answers are preserved in the database</li>
+                                    <li>Manual submission may be required</li>
+                                    <li>Check system logs for detailed error information</li>
+                                    <li>Consider extending time if submission delays are significant</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Reference -->
+                    @if (ViewBag.ErrorId != null)
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-2">Error Reference (for technical support):</h6>
+                            <div class="bg-light p-3 rounded">
+                                <code>@ViewBag.ErrorId</code>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Submission failed at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function attemptResubmission() {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        button.disabled = true;
+        
+        // Attempt to resubmit (this would typically call the submission endpoint)
+        // For now, we'll just reload the page after a delay
+        setTimeout(function() {
+            // In a real implementation, this would make an AJAX call to the submission endpoint
+            // If successful, redirect to results page
+            // If failed, show error and restore button
+            window.location.href = '@Url.Action("SubmitExam", "Exam")';
+        }, 2000);
+    }
+    
+    function contactCoordinator() {
+        alert('Please raise your hand or use the emergency contact method provided by your exam coordinator.\n\nYour answers are safe and will not be lost.');
+    }
+</script>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+    
+    code {
+        font-size: 0.9em;
+        color: #e83e8c;
+    }
+</style>

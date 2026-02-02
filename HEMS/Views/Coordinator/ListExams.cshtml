@@ -1,0 +1,159 @@
+@model List<HEMS.Models.Exam>
+@{
+    ViewBag.Title = "Manage Exams";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<body class="coordinator-layout">
+
+<div class="container">
+    <!-- Professional Header -->
+    <div class="coordinator-header">
+        <h2><i class="fas fa-list-alt"></i> Exam Management</h2>
+        <p class="lead">Comprehensive exam management with advanced controls for creating, publishing, and monitoring examinations.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="coordinator-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title"><i class="fas fa-file-alt"></i> Examination Overview</h5>
+                        <a href="@Url.Action("CreateExam", "Coordinator")" class="btn-coordinator btn-success">
+                            <i class="fas fa-plus-circle"></i> Create New Exam
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="coordinator-table">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-calendar"></i> Academic Year</th>
+                                        <th><i class="fas fa-file-text"></i> Title</th>
+                                        <th><i class="fas fa-clock"></i> Duration</th>
+                                        <th><i class="fas fa-question-circle"></i> Questions</th>
+                                        <th><i class="fas fa-toggle-on"></i> Status</th>
+                                        <th><i class="fas fa-calendar-plus"></i> Created</th>
+                                        <th><i class="fas fa-cogs"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var exam in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong class="text-primary">@exam.AcademicYear</strong>
+                                            </td>
+                                            <td>
+                                                <div class="text-break">@exam.Title</div>
+                                            </td>
+                                            <td>
+                                                <span class="coordinator-badge badge-info">
+                                                    <i class="fas fa-clock"></i> @exam.DurationMinutes min
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="coordinator-badge badge-secondary">
+                                                    <i class="fas fa-list-ol"></i> @exam.Questions.Count
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (exam.IsPublished)
+                                                {
+                                                    <span class="coordinator-badge badge-success">
+                                                        <i class="fas fa-globe"></i> Published
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="coordinator-badge badge-warning">
+                                                        <i class="fas fa-edit"></i> Draft
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    @exam.CreatedDate.ToString("MMM dd, yyyy")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="@Url.Action("ManageExam", "Coordinator", new { examId = exam.ExamId })" class="btn-coordinator btn-primary" style="padding: 6px 12px;">
+                                                        <i class="fas fa-cog"></i> Manage
+                                                    </a>
+                                                    
+                                                    @if (exam.IsPublished)
+                                                    {
+                                                        <a href="@Url.Action("ExamResults", "Coordinator", new { examId = exam.ExamId })" class="btn-coordinator btn-success" style="padding: 6px 12px;">
+                                                            <i class="fas fa-chart-bar"></i> Results
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-file-alt" style="font-size: 4rem; color: var(--coord-text-muted);"></i>
+                            </div>
+                            <h4 class="text-muted mb-3">No Exams Created Yet</h4>
+                            <p class="text-muted mb-4">You haven't created any exams yet. Get started by creating your first comprehensive examination.</p>
+                            <a href="@Url.Action("CreateExam", "Coordinator")" class="btn-coordinator btn-success">
+                                <i class="fas fa-plus-circle"></i> Create New Exam
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="row mt-4">
+                <div class="col-md-12 text-center">
+                    <a href="@Url.Action("Index", "Coordinator")" class="btn-coordinator btn-secondary">
+                        <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<style>
+    .table > tbody > tr > td {
+        vertical-align: middle;
+    }
+    
+    .text-break {
+        word-break: break-word;
+    }
+    
+    .btn-group-sm .btn-coordinator {
+        margin: 0 2px;
+    }
+</style>
+
+<style>
+    .table > tbody > tr > td {
+        vertical-align: middle;
+    }
+    
+    .badge {
+        font-size: 12px;
+    }
+    
+    .label {
+        font-size: 11px;
+    }
+</style>

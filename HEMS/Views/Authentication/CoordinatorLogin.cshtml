@@ -1,0 +1,99 @@
+@model HEMS.Models.ViewModels.CoordinatorLoginViewModel
+@{
+    ViewBag.Title = "Coordinator Login - HEMS";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="text-center mb-0">Coordinator Login</h3>
+                    <p class="text-center mb-0 mt-2 opacity-75">HEMS Administration Portal</p>
+                </div>
+                <div class="card-body p-4">
+                    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage))
+                    {
+                        <div class="alert alert-info">
+                            @ViewBag.InfoMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            @Model.ErrorMessage
+                        </div>
+                    }
+
+                    @if (ViewBag.AlreadyLoggedIn == true)
+                    {
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle"></i> Already Logged In</h5>
+                            <p class="mb-2">You are already logged in as: <strong>@ViewBag.UserEmail</strong></p>
+                            <div class="mt-3">
+                                <a href="@Url.Action("Index", "Coordinator")" class="btn btn-success me-2">
+                                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                                </a>
+                                <a href="@Url.Action("Logout", "Authentication")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="text-muted">Or login with different credentials:</h6>
+                    }
+
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Coordinator Access:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Use your coordinator email and password</li>
+                            <li>Single-step authentication for administrative access</li>
+                            <li>Contact system administrator if you need assistance</li>
+                        </ul>
+                    </div>
+
+                    @using (Html.BeginForm("CoordinatorLogin", "Authentication", FormMethod.Post, new { @class = "form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="form-group mb-3">
+                            @Html.LabelFor(m => m.Email, "Coordinator Email", new { @class = "form-label fw-bold" })
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "coordinator@university.edu.et", type = "email" })
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group mb-4">
+                            @Html.LabelFor(m => m.Password, "Password", new { @class = "form-label fw-bold" })
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter your password" })
+                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-success btn-lg px-5">
+                                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                            </button>
+                        </div>
+                    }
+
+                    <div class="text-center mt-4">
+                        <hr>
+                        <small class="text-muted">
+                            <i class="fas fa-users"></i> Student Login: 
+                            <a href="@Url.Action("Phase1Login", "Authentication")" class="text-decoration-none">
+                                Click here for student authentication
+                            </a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+}

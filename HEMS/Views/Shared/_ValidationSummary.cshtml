@@ -1,0 +1,82 @@
+@model List<string>
+
+@if (Model != null && Model.Any())
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading mb-2">
+                    <strong>Please correct the following errors:</strong>
+                </h6>
+                @if (Model.Count == 1)
+                {
+                    <p class="mb-0">@Html.Raw(Model.First())</p>
+                }
+                else
+                {
+                    <ul class="mb-0">
+                        @foreach (var error in Model)
+                        {
+                            <li>@Html.Raw(error)</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Also check ViewBag for additional error messages *@
+@if (ViewBag.ValidationErrors != null)
+{
+    @Html.Partial("_ValidationSummary", (List<string>)ViewBag.ValidationErrors)
+}
+
+@* Display ModelState errors if no specific validation errors provided *@
+@if ((Model == null || !Model.Any()) && ViewBag.ValidationErrors == null && !ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading mb-2">
+                    <strong>Please correct the following errors:</strong>
+                </h6>
+                <ul class="mb-0">
+                    @foreach (var modelError in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@modelError.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<style>
+    .alert {
+        border-radius: 0.5rem;
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .alert ul {
+        padding-left: 1.25rem;
+    }
+    
+    .alert li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .alert li:last-child {
+        margin-bottom: 0;
+    }
+</style>

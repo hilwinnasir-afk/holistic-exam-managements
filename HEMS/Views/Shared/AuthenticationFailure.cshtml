@@ -1,0 +1,127 @@
+@{
+    ViewBag.Title = "Authentication Failed";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark text-center py-3">
+                    <i class="fas fa-user-lock fa-2x mb-2"></i>
+                    <h4 class="mb-0">Authentication Failed</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Main Error Message -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">
+                                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+                                    {
+                                        @ViewBag.ErrorMessage
+                                    }
+                                    else
+                                    {
+                                        @:Authentication failed. Please check your credentials and try again.
+                                    }
+                                </h5>
+                                @if (!string.IsNullOrEmpty(ViewBag.SuggestedAction as string))
+                                {
+                                    <p class="mb-0">@ViewBag.SuggestedAction</p>
+                                }
+                                else
+                                {
+                                    <p class="mb-0">Verify your login information and ensure you're using the correct authentication phase.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Authentication Issues -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Common Issues:</h6>
+                        <div class="bg-light p-3 rounded">
+                            <ul class="mb-0 small">
+                                <li><strong>Phase 1 Login:</strong> Use your university email and calculated password (ID + last 2 digits of Ethiopian academic year)</li>
+                                <li><strong>Phase 2 Login:</strong> Use your ID number and the password announced by your coordinator</li>
+                                <li><strong>Password Change:</strong> You must change your password immediately after Phase 2 login</li>
+                                <li><strong>Phase Completion:</strong> Complete Phase 1 before attempting Phase 2 login</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="@Url.Action("Phase1Login", "Authentication")" class="btn btn-primary">
+                            <i class="fas fa-user-check me-2"></i>Phase 1 Login
+                        </a>
+                        
+                        <a href="@Url.Action("Phase2Login", "Authentication")" class="btn btn-outline-primary">
+                            <i class="fas fa-key me-2"></i>Phase 2 Login
+                        </a>
+                        
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Need Help?</h6>
+                                <p class="mb-2">If you continue to experience authentication issues:</p>
+                                <ul class="mb-0 small">
+                                    <li>Verify your university email is correctly registered</li>
+                                    <li>Check that you're using the correct ID number format</li>
+                                    <li>Ensure you're in the correct authentication phase</li>
+                                    <li>Contact your exam coordinator for assistance</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Authentication failed at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+    
+    .text-warning {
+        color: #856404 !important;
+    }
+</style>

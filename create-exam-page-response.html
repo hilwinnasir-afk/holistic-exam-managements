@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phase 1 Login - Identity Verification - HEMS</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css?v=j6fhJSuuyLpOSLuPJU0TsDV0iNjor5S3rDnvxJrt4bg" />
+    <link rel="stylesheet" href="/HEMS.styles.css?v=MIFoghapPiA0oW3Ebc_gdioRHaVuzKXIlxaUQv0_koA" />
+</head>
+<body>
+    <!-- Navigation removed for security - only authenticated users should see navigation -->
+    <div b-cdz091i3kk class="container">
+        <main b-cdz091i3kk role="main" class="pb-3">
+            
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">Phase 1 Login</h3>
+                    <p class="text-center mb-0 mt-2 opacity-75">Identity Verification</p>
+                </div>
+                <div class="card-body">
+
+
+                    <div class="alert alert-info">
+                        <strong>Instructions:</strong>
+                        <ul class="mb-0">
+                            <li>Use your university email address</li>
+                            <li>Password format: First 4 characters of Student ID + "18"</li>
+                            <li>Example: If your ID is "SE123456", password is "SE1218"</li>
+                            <li>Phase 1 login can only be used once</li>
+                        </ul>
+                    </div>
+
+<form action="/Authentication/Phase1Login" class="form" method="post">                        <div class="form-group mb-3">
+                            <label class="form-label" for="Email">University Email</label>
+                            <input class="form-control" data-val="true" data-val-required="University email is required" id="Email" name="Email" placeholder="student@university.edu.et" type="email" value="" />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="Email" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label class="form-label" for="Password">Password</label>
+                            <input class="form-control" data-val="true" data-val-required="Password is required" id="Password" name="Password" placeholder="Enter calculated password" type="password" />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="Password" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> Login to Phase 1
+                            </button>
+                        </div>
+<input name="__RequestVerificationToken" type="hidden" value="CfDJ8F3QZ8Ba-kZKsjRP9grla7ifNgYlWB02itwg-wI6V_u2M8L3EhO1qPLUADLrzWYV91w7fXQ7mqStwgGBhu_8LrTbk4Oun6py4aus_9olSNNePftd7sa5fMsswjHbfZ5VTyRImPNOv1Fn9_i_crwx5L4" /></form>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Need help? Contact your coordinator for assistance.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        </main>
+    </div>
+
+    <footer b-cdz091i3kk class="border-top footer text-muted">
+        <div b-cdz091i3kk class="container">
+            &copy; 2026 - HEMS - Holistic Examination Management System
+        </div>
+    </footer>
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js?v=hRQyftXiu1lLX2P9Ly9xa4gHJgLeR1uGN5qegUobtGo"></script>
+    
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+
+</body>
+</html>
+

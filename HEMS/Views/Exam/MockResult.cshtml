@@ -1,0 +1,158 @@
+@{
+    ViewBag.Title = "Exam Results - Demo Mode";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white text-center">
+                    <h3><i class="fas fa-check-circle"></i> Exam Completed Successfully</h3>
+                    <p class="mb-0">Demo Mode - Results</p>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h4>@ViewBag.ExamTitle</h4>
+                        <p class="text-muted">Student: @ViewBag.StudentName</p>
+                        <p class="text-muted">Submitted: @ViewBag.SubmissionTime</p>
+                    </div>
+
+                    <!-- Score Display -->
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">Score</h5>
+                                    <h2 class="text-success">@ViewBag.CorrectAnswers/@ViewBag.TotalQuestions</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">Percentage</h5>
+                                    <h2 class="text-success">@ViewBag.Percentage%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">Grade</h5>
+                                    <h2 class="text-success">@ViewBag.Grade</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <h6>Performance Overview</h6>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @ViewBag.Percentage%" 
+                                 aria-valuenow="@ViewBag.Percentage" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                @ViewBag.Percentage%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demo Notice -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Demo Mode Notice</h6>
+                        <p class="mb-0">
+                            This is a demonstration of the exam system. In the actual system:
+                        </p>
+                        <ul class="mt-2 mb-0">
+                            <li>Your answers would be saved to the database</li>
+                            <li>Results would be calculated based on your actual responses</li>
+                            <li>Detailed question-by-question analysis would be available</li>
+                            <li>Results would be stored for coordinator review</li>
+                        </ul>
+                    </div>
+
+                    <!-- Mock Question Results -->
+                    <div class="mt-4">
+                        <h6>Question Summary (Demo Data)</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Question</th>
+                                        <th>Status</th>
+                                        <th>Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1. Time complexity of binary search</td>
+                                        <td><span class="badge badge-success">Answered</span></td>
+                                        <td><i class="fas fa-check text-success"></i> Correct</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2. LIFO data structure</td>
+                                        <td><span class="badge badge-success">Answered</span></td>
+                                        <td><i class="fas fa-check text-success"></i> Correct</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3. SQL stands for</td>
+                                        <td><span class="badge badge-success">Answered</span></td>
+                                        <td><i class="fas fa-check text-success"></i> Correct</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4. Programming paradigm</td>
+                                        <td><span class="badge badge-warning">Answered</span></td>
+                                        <td><i class="fas fa-times text-danger"></i> Incorrect</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5. Version control systems</td>
+                                        <td><span class="badge badge-success">Answered</span></td>
+                                        <td><i class="fas fa-check text-success"></i> Correct</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center mt-4">
+                        <a href="/Home/ExamAccess" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Exam Access
+                        </a>
+                        <a href="/Exam/MockExam" class="btn btn-secondary ml-2">
+                            <i class="fas fa-redo"></i> Take Demo Again
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.table th {
+    border-top: none;
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.8em;
+}
+</style>

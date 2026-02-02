@@ -1,0 +1,126 @@
+@{
+    ViewBag.Title = "Service Unavailable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark text-center py-3">
+                    <i class="fas fa-tools fa-2x mb-2"></i>
+                    <h4 class="mb-0">Service Temporarily Unavailable</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Error Message -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">The exam system is temporarily unavailable</h5>
+                                <p class="mb-0">The system may be undergoing maintenance or experiencing high traffic. Please try again in a few minutes.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Information -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Current Status:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-clock text-info me-2"></i>
+                                System maintenance may be in progress
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-users text-info me-2"></i>
+                                High traffic volume may be affecting performance
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt text-success me-2"></i>
+                                Your exam data and progress are safe
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                            <i class="fas fa-redo me-2"></i>Try Again
+                        </button>
+                        
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Important Notice for Exam Takers -->
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">For Exam Takers</h6>
+                                <p class="mb-0">If you're currently taking an exam and encounter this error, notify your exam coordinator immediately. Your answers are automatically saved and will not be lost.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-refresh notice -->
+                    <div class="alert alert-light border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-sync-alt me-3 mt-1 text-secondary"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Auto-Refresh</h6>
+                                <p class="mb-0">This page will automatically check if the service is available again in <span id="countdown">60</span> seconds.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Error occurred at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh countdown
+    let countdown = 60;
+    const countdownElement = document.getElementById('countdown');
+    
+    const timer = setInterval(function() {
+        countdown--;
+        countdownElement.textContent = countdown;
+        
+        if (countdown <= 0) {
+            clearInterval(timer);
+            window.location.reload();
+        }
+    }, 1000);
+</script>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+</style>

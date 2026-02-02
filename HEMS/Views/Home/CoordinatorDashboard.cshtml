@@ -1,0 +1,198 @@
+@{
+    ViewBag.Title = "Coordinator Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-tie"></i> Coordinator Dashboard
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.User != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Coordinator Information</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Username:</strong></td>
+                                        <td>@ViewBag.User.Username</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Role:</strong></td>
+                                        <td>@ViewBag.User.Role?.RoleName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Account Created:</strong></td>
+                                        <td>@ViewBag.User.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5>System Status</h5>
+                                <div class="list-group">
+                                    <div class="list-group-item">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        <strong>System Online</strong>
+                                        <small class="text-muted d-block">All services operational</small>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <i class="fas fa-shield-alt text-success"></i>
+                                        <strong>Security Active</strong>
+                                        <small class="text-muted d-block">Two-phase authentication enabled</small>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <i class="fas fa-database text-info"></i>
+                                        <strong>Database Connected</strong>
+                                        <small class="text-muted d-block">Data storage operational</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users"></i> Student Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-upload text-primary"></i>
+                            <strong>Import Students</strong>
+                            <small class="text-muted d-block">Bulk import from CSV/Excel</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-list text-secondary"></i>
+                            <strong>View All Students</strong>
+                            <small class="text-muted d-block">Manage student records</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-user-plus text-success"></i>
+                            <strong>Add Individual Student</strong>
+                            <small class="text-muted d-block">Manual student registration</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list"></i> Exam Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-plus-circle text-primary"></i>
+                            <strong>Create New Exam</strong>
+                            <small class="text-muted d-block">Design exam questions</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-edit text-warning"></i>
+                            <strong>Edit Existing Exams</strong>
+                            <small class="text-muted d-block">Modify exam content</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-eye text-info"></i>
+                            <strong>Publish Exams</strong>
+                            <small class="text-muted d-block">Make exams available</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog"></i> Session Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-key text-success"></i>
+                            <strong>Generate Session Password</strong>
+                            <small class="text-muted d-block">Create Phase 2 passwords</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-clock text-warning"></i>
+                            <strong>Monitor Active Sessions</strong>
+                            <small class="text-muted d-block">Track ongoing exams</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                            <i class="fas fa-chart-bar text-info"></i>
+                            <strong>View Results</strong>
+                            <small class="text-muted d-block">Exam statistics and grades</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Quick Start Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-list-ol text-primary"></i> Setting Up an Exam Session:</h6>
+                            <ol>
+                                <li>Import student records using CSV/Excel file</li>
+                                <li>Create and design your examination questions</li>
+                                <li>Publish the exam to make it available to students</li>
+                                <li>Generate a session password for Phase 2 authentication</li>
+                                <li>Announce the session password to students in the exam room</li>
+                                <li>Monitor exam progress and review results</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-lightbulb text-warning"></i> Best Practices:</h6>
+                            <ul>
+                                <li>Import students well before the exam date</li>
+                                <li>Test exam questions thoroughly before publishing</li>
+                                <li>Generate session passwords just before the exam starts</li>
+                                <li>Keep session passwords secure and announce them clearly</li>
+                                <li>Monitor student login status during the exam</li>
+                                <li>Review results promptly after exam completion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,178 @@
+@{
+    ViewBag.Title = "Grading System Failure";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark text-center py-3">
+                    <i class="fas fa-calculator fa-2x mb-2"></i>
+                    <h4 class="mb-0">Grading System Failure</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Error Message -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">Unable to calculate your exam results</h5>
+                                <p class="mb-0">Your exam was submitted successfully, but there was an error calculating your grade.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submission Success -->
+                    <div class="alert alert-success border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle me-3 mt-1 text-success"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Your Exam Was Successfully Submitted</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li>All your answers have been recorded</li>
+                                    <li>Your submission time has been logged</li>
+                                    <li>Your exam is complete and valid</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What this means -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">What this means:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                Your exam submission is complete and valid
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                The grading system will be fixed and your results calculated
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                You will be notified when results are available
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                        
+                        <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload()">
+                            <i class="fas fa-redo me-2"></i>Check Results Again
+                        </button>
+                    </div>
+
+                    <!-- Submission Details -->
+                    @if (ViewBag.SubmissionTime != null || ViewBag.ExamTitle != null)
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Submission Details:</h6>
+                            <div class="bg-light p-3 rounded">
+                                @if (ViewBag.ExamTitle != null)
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted">Exam:</div>
+                                        <div class="col-8">@ViewBag.ExamTitle</div>
+                                    </div>
+                                }
+                                @if (ViewBag.SubmissionTime != null)
+                                {
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted">Submitted:</div>
+                                        <div class="col-8">@ViewBag.SubmissionTime</div>
+                                    </div>
+                                }
+                                <div class="row">
+                                    <div class="col-4 text-muted">Status:</div>
+                                    <div class="col-8"><span class="badge bg-success">Submitted Successfully</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Next Steps -->
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">What Happens Next</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li>Technical support has been notified of the grading issue</li>
+                                    <li>Your results will be calculated as soon as the system is fixed</li>
+                                    <li>You will be notified when results are available</li>
+                                    <li>Your coordinator will provide updates on result availability</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="alert alert-light border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-phone me-3 mt-1 text-secondary"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Questions About Your Results?</h6>
+                                <p class="mb-0">Contact your exam coordinator if you have questions about when your results will be available.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Reference -->
+                    @if (ViewBag.ErrorId != null)
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-2">Error Reference:</h6>
+                            <div class="bg-light p-3 rounded">
+                                <code>@ViewBag.ErrorId</code>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Grading error occurred at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+    
+    .badge {
+        font-size: 0.8em;
+    }
+    
+    code {
+        font-size: 0.9em;
+        color: #e83e8c;
+    }
+</style>

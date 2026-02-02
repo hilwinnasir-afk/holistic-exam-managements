@@ -1,0 +1,73 @@
+@model List<string>
+
+@if (Model != null && Model.Any())
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-exclamation-circle me-3 mt-1 text-warning"></i>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading mb-2">
+                    <strong>Please review the following warnings:</strong>
+                </h6>
+                @if (Model.Count == 1)
+                {
+                    <p class="mb-0">@Html.Raw(Model.First())</p>
+                }
+                else
+                {
+                    <ul class="mb-0">
+                        @foreach (var warning in Model)
+                        {
+                            <li>@Html.Raw(warning)</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Also check ViewBag for additional warning messages *@
+@if (ViewBag.ValidationWarnings != null)
+{
+    @Html.Partial("_ValidationWarnings", (List<string>)ViewBag.ValidationWarnings)
+}
+
+@* Check TempData for warning messages *@
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-exclamation-circle me-3 mt-1 text-warning"></i>
+            <div class="flex-grow-1">
+                <p class="mb-0">@Html.Raw(TempData["WarningMessage"].ToString())</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<style>
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .alert-warning .text-warning {
+        color: #856404 !important;
+    }
+    
+    .alert ul {
+        padding-left: 1.25rem;
+    }
+    
+    .alert li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .alert li:last-child {
+        margin-bottom: 0;
+    }
+</style>

@@ -1,0 +1,215 @@
+@model HEMS.Services.ApplicationSettings
+@{
+    ViewBag.Title = "System Configuration";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h1>System Configuration</h1>
+                <p class="lead">Current application configuration settings</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+            {
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> @ViewBag.Error
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Environment Settings</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-striped">
+                                <tr>
+                                    <td><strong>Environment:</strong></td>
+                                    <td>
+                                        <span class="label @(Model.Environment == "Production" ? "label-danger" : Model.Environment == "Staging" ? "label-warning" : "label-info")">
+                                            @Model.Environment
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Detailed Errors:</strong></td>
+                                    <td>
+                                        <span class="label @(Model.EnableDetailedErrors ? "label-warning" : "label-success")">
+                                            @(Model.EnableDetailedErrors ? "Enabled" : "Disabled")
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Log Level:</strong></td>
+                                    <td>
+                                        <span class="label @(Model.LogLevel == "Debug" ? "label-info" : Model.LogLevel == "Error" ? "label-danger" : "label-default")">
+                                            @Model.LogLevel
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SSL Required:</strong></td>
+                                    <td>
+                                        <span class="label @(Model.RequireSSL ? "label-success" : "label-warning")">
+                                            @(Model.RequireSSL ? "Yes" : "No")
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Test Data:</strong></td>
+                                    <td>
+                                        <span class="label @(Model.EnableTestData ? "label-warning" : "label-success")">
+                                            @(Model.EnableTestData ? "Enabled" : "Disabled")
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Performance Settings</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-striped">
+                                <tr>
+                                    <td><strong>Caching:</strong></td>
+                                    <td>
+                                        <span class="label @(Model.CacheEnabled ? "label-success" : "label-warning")">
+                                            @(Model.CacheEnabled ? "Enabled" : "Disabled")
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Session Timeout:</strong></td>
+                                    <td>@Model.SessionTimeoutMinutes minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Max File Upload:</strong></td>
+                                    <td>@Model.MaxFileUploadSizeMB MB</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Exam Session Timeout:</strong></td>
+                                    <td>@Model.ExamSessionTimeoutMinutes minutes</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Security Settings</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-striped">
+                                <tr>
+                                    <td><strong>Max Login Attempts:</strong></td>
+                                    <td>@Model.MaxLoginAttempts</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Account Lockout:</strong></td>
+                                    <td>@Model.AccountLockoutMinutes minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Password Expiry:</strong></td>
+                                    <td>@Model.PasswordExpiryDays days</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Database Settings</h3>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-striped">
+                                <tr>
+                                    <td><strong>Connection String:</strong></td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.DatabaseConnectionString))
+                                        {
+                                            <span class="label label-success">Configured</span>
+                                            <small class="text-muted">
+                                                <br />@(Model.DatabaseConnectionString.Length > 50 ? Model.DatabaseConnectionString.Substring(0, 50) + "..." : Model.DatabaseConnectionString)
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-danger">Not Configured</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Actions</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="btn-group" role="group">
+                                <a href="@Url.Action("Validate", "Configuration")" class="btn btn-primary">
+                                    <i class="glyphicon glyphicon-check"></i> Validate Configuration
+                                </a>
+                                <button type="button" class="btn btn-info" onclick="refreshConfiguration()">
+                                    <i class="glyphicon glyphicon-refresh"></i> Refresh
+                                </button>
+                                <button type="button" class="btn btn-default" onclick="exportConfiguration()">
+                                    <i class="glyphicon glyphicon-download-alt"></i> Export Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function refreshConfiguration() {
+        location.reload();
+    }
+
+    function exportConfiguration() {
+        $.ajax({
+            url: '@Url.Action("GetConfiguration", "Configuration")',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.data, null, 2));
+                    var downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "hems-configuration.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                } else {
+                    alert('Failed to export configuration: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Failed to export configuration');
+            }
+        });
+    }
+</script>

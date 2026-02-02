@@ -1,0 +1,192 @@
+@{
+    ViewBag.Title = "Coordinator Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-tachometer-alt"></i> Coordinator Dashboard</h2>
+            <p class="lead">Welcome to the HEMS Coordinator Dashboard. Manage students, exams, and system settings.</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@ViewBag.TotalStudents</h4>
+                            <p class="card-text">Total Students</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@ViewBag.TotalExams</h4>
+                            <p class="card-text">Total Exams</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@ViewBag.PublishedExams</h4>
+                            <p class="card-text">Published Exams</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@ViewBag.ActiveExamSessions</h4>
+                            <p class="card-text">Active Sessions</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">Import Students</h5>
+                                    <p class="card-text">Upload CSV file to import student records</p>
+                                    <a href="@Url.Action("ImportStudents", "Coordinator")" class="btn btn-primary">
+                                        <i class="fas fa-upload"></i> Import Students
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                    <h5 class="card-title">Manage Students</h5>
+                                    <p class="card-text">View and manage all student records</p>
+                                    <a href="@Url.Action("ManageStudents", "Coordinator")" class="btn btn-success">
+                                        <i class="fas fa-users"></i> Manage Students
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-3x text-info mb-3"></i>
+                                    <h5 class="card-title">Create Exam</h5>
+                                    <p class="card-text">Create new examination for academic year</p>
+                                    <a href="@Url.Action("CreateExam", "Coordinator")" class="btn btn-info">
+                                        <i class="fas fa-plus-circle"></i> Create Exam
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-list-alt fa-3x text-warning mb-3"></i>
+                                    <h5 class="card-title">Manage Exams</h5>
+                                    <p class="card-text">View and manage all examinations</p>
+                                    <a href="@Url.Action("ListExams", "Coordinator")" class="btn btn-warning">
+                                        <i class="fas fa-list-alt"></i> Manage Exams
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-secondary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-key fa-3x text-secondary mb-3"></i>
+                                    <h5 class="card-title">Exam Sessions</h5>
+                                    <p class="card-text">Manage exam day passwords and sessions</p>
+                                    <a href="@Url.Action("ManageExamSessions", "Coordinator")" class="btn btn-secondary">
+                                        <i class="fas fa-key"></i> Manage Sessions
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-dark">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-bar fa-3x text-dark mb-3"></i>
+                                    <h5 class="card-title">View Results</h5>
+                                    <p class="card-text">View exam results and statistics</p>
+                                    <a href="@Url.Action("ListExams", "Coordinator")" class="btn btn-dark">
+                                        <i class="fas fa-chart-bar"></i> View Results
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Activity tracking will be implemented in future updates.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add any dashboard-specific JavaScript here
+            console.log('Coordinator Dashboard loaded');
+        });
+    </script>
+}

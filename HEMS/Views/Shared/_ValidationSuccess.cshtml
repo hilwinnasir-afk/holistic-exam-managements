@@ -1,0 +1,64 @@
+@model string
+
+@* Display success message from model *@
+@if (!string.IsNullOrEmpty(Model))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-check-circle me-3 mt-1 text-success"></i>
+            <div class="flex-grow-1">
+                <p class="mb-0">@Html.Raw(Model)</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Check TempData for success messages *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-check-circle me-3 mt-1 text-success"></i>
+            <div class="flex-grow-1">
+                <p class="mb-0">@Html.Raw(TempData["SuccessMessage"].ToString())</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Check ViewBag for success messages *@
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-check-circle me-3 mt-1 text-success"></i>
+            <div class="flex-grow-1">
+                <p class="mb-0">@Html.Raw(ViewBag.SuccessMessage.ToString())</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<style>
+    .alert-success {
+        background-color: #d1edff;
+        color: #0c5460;
+        border: 1px solid #b8daff;
+    }
+    
+    .alert-success .text-success {
+        color: #0c5460 !important;
+    }
+</style>
+
+<script>
+    // Auto-hide success messages after 5 seconds
+    $(document).ready(function() {
+        setTimeout(function() {
+            $('.alert-success').fadeOut('slow');
+        }, 5000);
+    });
+</script>

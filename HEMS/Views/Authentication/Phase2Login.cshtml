@@ -1,0 +1,104 @@
+@model HEMS.Models.ViewModels.Phase2LoginViewModel
+@{
+    ViewBag.Title = "Phase 2 Login - Exam Access";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Phase 2 Login</h3>
+                    <p class="text-center text-muted">Exam Day Access</p>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+                    {
+                        <div class="alert alert-success">
+                            @ViewBag.SuccessMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            @Model.ErrorMessage
+                            
+                            @if (ViewBag.LockoutEndTime != null)
+                            {
+                                <br /><small><strong>Account will be unlocked at:</strong> @ViewBag.LockoutEndTime</small>
+                            }
+                            
+                            @if (ViewBag.FailedAttemptCount != null && ViewBag.FailedAttemptCount > 0)
+                            {
+                                <br /><small><strong>Failed attempts:</strong> @ViewBag.FailedAttemptCount out of @HEMS.Models.PasswordPolicy.MaxFailedAttempts</small>
+                            }
+                            
+                            @if (ViewBag.ShowPhase1Link == true)
+                            {
+                                <br />
+                                <a href="@Url.Action("Phase1Login", "Authentication")" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-arrow-right"></i> Go to Phase 1 Login
+                                </a>
+                            }
+                        </div>
+                    }
+
+                    <div class="alert alert-warning">
+                        <strong>Exam Day Instructions:</strong>
+                        <ul class="mb-0">
+                            <li>Use your Student ID number</li>
+                            <li>Use the session password announced by your coordinator</li>
+                            <li>Ensure you have completed Phase 1 login</li>
+                            <li>You will be required to change your password after login</li>
+                        </ul>
+                    </div>
+
+                    @using (Html.BeginForm("Phase2Login", "Authentication", FormMethod.Post, new { @class = "form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.IdNumber, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.IdNumber, new { @class = "form-control", placeholder = "Enter your Student ID" })
+                            @Html.ValidationMessageFor(m => m.IdNumber, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Password, new { @class = "form-label" })
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter session password" })
+                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">
+                                Session password will be announced by your coordinator in the exam room.
+                            </small>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-unlock"></i> Access Exam
+                            </button>
+                        </div>
+                    }
+
+                    <div class="text-center mt-3">
+                        <p>
+                            <a href="@Url.Action("Phase1Login", "Authentication")" class="btn btn-link">
+                                <i class="fas fa-arrow-left"></i> Back to Phase 1 Login
+                            </a>
+                        </p>
+                        <small class="text-muted">
+                            Having trouble? Ask your coordinator for assistance.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+}

@@ -1,0 +1,323 @@
+@model List<HEMS.Models.Student>
+@{
+    ViewBag.Title = "Manage Students";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<body class="coordinator-layout">
+
+<div class="container-fluid">
+    <!-- Professional Header -->
+    <div class="coordinator-header">
+        <h2><i class="fas fa-users"></i> Manage Students</h2>
+        <p class="lead">Comprehensive student management with advanced search, filtering, and bulk operations for efficient administration.</p>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="coordinator-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="mb-2 mb-md-0">
+                            <a href="@Url.Action("ImportStudents", "Coordinator")" class="btn-coordinator btn-primary me-2">
+                                <i class="fas fa-upload"></i> Import Students
+                            </a>
+                            <a href="@Url.Action("Index", "Coordinator")" class="btn-coordinator btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+                        <div>
+                            <div class="stats-card stats-primary d-inline-block" style="padding: 15px 20px; margin: 0;">
+                                <div class="stats-number" style="font-size: 1.5rem;">@Model.Count</div>
+                                <div class="stats-label" style="font-size: 0.8rem;">Total Students</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="coordinator-alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> 
+            <strong>Success!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="coordinator-alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> 
+            <strong>Error!</strong> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Students Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="coordinator-table">
+                <div class="card-header">
+                    <h5 class="card-title"><i class="fas fa-table"></i> Student Records</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <!-- Search and Filter -->
+                        <div class="row mb-4">
+                            <div class="col-lg-6 col-md-8 mb-3">
+                                <div class="coordinator-search">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search by ID Number or Email Address...">
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-4 mb-3">
+                                <select class="form-control" id="batchYearFilter">
+                                    <option value="">All Batch Years</option>
+                                    @foreach (var year in Model.Select(s => s.BatchYear).Distinct().OrderByDescending(y => y))
+                                    {
+                                        <option value="@year">Batch @year</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-12 mb-3">
+                                <button class="btn-coordinator btn-outline" onclick="clearFilters()" style="width: 100%;">
+                                    <i class="fas fa-times"></i> Clear Filters
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table" id="studentsTable">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-id-card"></i> ID Number</th>
+                                        <th><i class="fas fa-envelope"></i> University Email</th>
+                                        <th><i class="fas fa-calendar"></i> Batch Year</th>
+                                        <th><i class="fas fa-user-check"></i> Phase 1 Status</th>
+                                        <th><i class="fas fa-clock"></i> Created Date</th>
+                                        <th><i class="fas fa-cogs"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var student in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong class="text-primary">@student.IdNumber</strong>
+                                            </td>
+                                            <td>
+                                                <i class="fas fa-envelope text-muted me-2"></i>
+                                                <span class="text-break">@student.UniversityEmail</span>
+                                            </td>
+                                            <td>
+                                                <span class="coordinator-badge badge-secondary">@student.BatchYear</span>
+                                            </td>
+                                            <td>
+                                                @if (student.User?.LoginPhaseCompleted == true)
+                                                {
+                                                    <span class="coordinator-badge badge-success">
+                                                        <i class="fas fa-check"></i> Completed
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="coordinator-badge badge-warning">
+                                                        <i class="fas fa-clock"></i> Pending
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    @student.CreatedDate.ToString("MMM dd, yyyy")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn-coordinator btn-outline" onclick="viewStudent(@student.StudentId)" title="View Details" style="padding: 6px 12px;">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-coordinator btn-danger" onclick="confirmDelete(@student.StudentId, '@student.IdNumber')" title="Delete Student" style="padding: 6px 12px;">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-users" style="font-size: 4rem; color: var(--coord-text-muted);"></i>
+                            </div>
+                            <h4 class="text-muted mb-3">No Students Found</h4>
+                            <p class="text-muted mb-4">No student records have been imported yet. Get started by importing your first batch of students.</p>
+                            <a href="@Url.Action("ImportStudents", "Coordinator")" class="btn-coordinator btn-primary">
+                                <i class="fas fa-upload"></i> Import Students
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade coordinator-modal" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete student <strong id="deleteStudentId" class="text-primary"></strong>?</p>
+                <div class="coordinator-alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This action cannot be undone. The student's user account and all associated data will be permanently deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-coordinator btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <form method="post" action="@Url.Action("DeleteStudent", "Coordinator")" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="deleteStudentIdInput" name="studentId" />
+                    <button type="submit" class="btn-coordinator btn-danger">
+                        <i class="fas fa-trash"></i> Delete Student
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal fade coordinator-modal" id="studentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user"></i> Student Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="studentDetails">
+                <!-- Student details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-coordinator btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Search functionality
+        $('#searchInput').on('keyup', function() {
+            filterTable();
+        });
+
+        // Batch year filter
+        $('#batchYearFilter').on('change', function() {
+            filterTable();
+        });
+
+        function filterTable() {
+            var searchText = $('#searchInput').val().toLowerCase();
+            var selectedYear = $('#batchYearFilter').val();
+
+            $('#studentsTable tbody tr').each(function() {
+                var row = $(this);
+                var idNumber = row.find('td:eq(0)').text().toLowerCase();
+                var email = row.find('td:eq(1)').text().toLowerCase();
+                var batchYear = row.find('td:eq(2)').text();
+
+                var matchesSearch = searchText === '' || 
+                                  idNumber.includes(searchText) || 
+                                  email.includes(searchText);
+                
+                var matchesYear = selectedYear === '' || batchYear.includes(selectedYear);
+
+                if (matchesSearch && matchesYear) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+        }
+
+        function clearFilters() {
+            $('#searchInput').val('');
+            $('#batchYearFilter').val('');
+            filterTable();
+        }
+
+        function confirmDelete(studentId, idNumber) {
+            $('#deleteStudentId').text(idNumber);
+            $('#deleteStudentIdInput').val(studentId);
+            $('#deleteModal').modal('show');
+        }
+
+        function viewStudent(studentId) {
+            // In a real implementation, this would load student details via AJAX
+            $('#studentDetails').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+            $('#studentModal').modal('show');
+            
+            // Simulate loading student details
+            setTimeout(function() {
+                $('#studentDetails').html('<div class="alert alert-info"><i class="fas fa-info-circle"></i> Student details view will be implemented in future updates.</div>');
+            }, 1000);
+        }
+
+        $(document).ready(function() {
+            // Initialize tooltips
+            $('[title]').tooltip();
+            
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert-dismissible').alert('close');
+            }, 5000);
+        });
+    </script>
+}
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    
+    .table-responsive {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .fs-6 {
+        font-size: 1.25rem !important;
+    }
+</style>

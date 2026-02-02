@@ -1,0 +1,271 @@
+@model List<HEMS.Models.ExamSession>
+@{
+    ViewBag.Title = "Manage Exam Sessions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Success/Error Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <i class="glyphicon glyphicon-ok-sign"></i>
+                    @Html.Raw(TempData["SuccessMessage"])
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <i class="glyphicon glyphicon-exclamation-sign"></i>
+                    @Html.Raw(TempData["ErrorMessage"])
+                </div>
+            }
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>
+                    <i class="glyphicon glyphicon-key text-warning"></i>
+                    Exam Session Management
+                    <small>Monitor and control active exam sessions</small>
+                </h1>
+            </div>
+
+            <!-- Active Sessions Panel -->
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-list-alt"></i>
+                        Active Exam Sessions
+                        <span class="badge pull-right">@Model.Count(s => s.IsActive)</span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered">
+                                <thead class="bg-primary">
+                                    <tr>
+                                        <th><i class="glyphicon glyphicon-file-text"></i> Exam</th>
+                                        <th><i class="glyphicon glyphicon-calendar"></i> Academic Year</th>
+                                        <th><i class="glyphicon glyphicon-time"></i> Created</th>
+                                        <th><i class="glyphicon glyphicon-hourglass"></i> Expires</th>
+                                        <th><i class="glyphicon glyphicon-signal"></i> Status</th>
+                                        <th><i class="glyphicon glyphicon-cog"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var session in Model.OrderByDescending(s => s.CreatedDate))
+                                    {
+                                        var isActive = session.IsActive && (!session.ExpiryDate.HasValue || session.ExpiryDate.Value > DateTime.Now);
+                                        var isExpired = session.ExpiryDate.HasValue && session.ExpiryDate.Value < DateTime.Now;
+                                        
+                                        <tr class="@(isActive ? "success" : isExpired ? "danger" : "warning")">
+                                            <td>
+                                                <strong>@session.Exam.Title</strong>
+                                                @if (session.Exam.IsPublished)
+                                                {
+                                                    <span class="label label-success label-xs">Published</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="label label-warning label-xs">Draft</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-info">@session.Exam.AcademicYear</span>
+                                            </td>
+                                            <td>
+                                                <small>@session.CreatedDate.ToString("MMM dd, yyyy")</small><br/>
+                                                <small class="text-muted">@session.CreatedDate.ToString("HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                @if (session.ExpiryDate.HasValue)
+                                                {
+                                                    <small>@session.ExpiryDate.Value.ToString("MMM dd, yyyy")</small><br/>
+                                                    <small class="text-muted">@session.ExpiryDate.Value.ToString("HH:mm")</small>
+                                                    @if (isExpired)
+                                                    {
+                                                        <br/><span class="label label-danger">Expired</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <br/><span class="label label-success">Valid</span>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">No expiry</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                @if (isActive)
+                                                {
+                                                    <span class="label label-success label-lg">
+                                                        <i class="glyphicon glyphicon-ok-circle"></i>
+                                                        ACTIVE
+                                                    </span>
+                                                }
+                                                else if (isExpired)
+                                                {
+                                                    <span class="label label-danger label-lg">
+                                                        <i class="glyphicon glyphicon-time"></i>
+                                                        EXPIRED
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="label label-default label-lg">
+                                                        <i class="glyphicon glyphicon-pause"></i>
+                                                        INACTIVE
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    @Html.ActionLink("Manage", "ManageExam", "Coordinator", 
+                                                        new { examId = session.ExamId }, 
+                                                        new { @class = "btn btn-primary btn-sm", title = "Manage Exam" })
+                                                    
+                                                    @if (session.IsActive)
+                                                    {
+                                                        @using (Html.BeginForm("DeactivateExamSession", "Coordinator", FormMethod.Post, new { @class = "btn-group-form" }))
+                                                        {
+                                                            @Html.AntiForgeryToken()
+                                                            @Html.Hidden("examSessionId", session.ExamSessionId)
+                                                            <button type="submit" class="btn btn-danger btn-sm" 
+                                                                    onclick="return confirm('Are you sure you want to deactivate this exam session? Students will no longer be able to access the exam.')"
+                                                                    title="Deactivate Session">
+                                                                <i class="glyphicon glyphicon-stop"></i>
+                                                                Deactivate
+                                                            </button>
+                                                        }
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center">
+                            <h4>
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                No Exam Sessions Found
+                            </h4>
+                            <p>There are currently no exam sessions. Generate session passwords for published exams to enable Phase 2 authentication.</p>
+                            <p>
+                                @Html.ActionLink("Create New Exam", "CreateExam", "Coordinator", null, new { @class = "btn btn-primary" })
+                                @Html.ActionLink("View All Exams", "ListExams", "Coordinator", null, new { @class = "btn btn-default" })
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Instructions Panel -->
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <i class="glyphicon glyphicon-question-sign"></i>
+                        Session Management Guide
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="glyphicon glyphicon-list-ol"></i> Quick Steps</h5>
+                            <ol>
+                                <li><strong>Publish Exam:</strong> Ensure your exam is published and ready</li>
+                                <li><strong>Generate Password:</strong> Create a session password for Phase 2 login</li>
+                                <li><strong>Share Password:</strong> Provide the password to students in the exam room</li>
+                                <li><strong>Monitor Sessions:</strong> Use this page to track active sessions</li>
+                                <li><strong>Deactivate:</strong> End sessions when the exam period is over</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="glyphicon glyphicon-info-sign"></i> Important Notes</h5>
+                            <ul>
+                                <li>Sessions automatically expire after 24 hours for security</li>
+                                <li>Only one active session per exam is allowed</li>
+                                <li>Students need Phase 1 completion before Phase 2 access</li>
+                                <li>Deactivated sessions cannot be reactivated</li>
+                                <li>Session passwords are securely hashed in the database</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="btn-toolbar" role="toolbar">
+                        <div class="btn-group" role="group">
+                            @Html.ActionLink("Dashboard", "Index", "Coordinator", null, new { @class = "btn btn-primary" })
+                            @Html.ActionLink("All Exams", "ListExams", "Coordinator", null, new { @class = "btn btn-default" })
+                            @Html.ActionLink("Create Exam", "CreateExam", "Coordinator", null, new { @class = "btn btn-success" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table > tbody > tr > td {
+        vertical-align: middle;
+    }
+    
+    .label-xs {
+        font-size: 9px;
+        padding: 2px 4px;
+    }
+    
+    .label-lg {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+    
+    .btn-group-form {
+        display: inline-block;
+        margin-left: 5px;
+    }
+    
+    .page-header {
+        border-bottom: 2px solid #337ab7;
+        margin-bottom: 30px;
+    }
+    
+    .panel-heading .badge {
+        background-color: rgba(255,255,255,0.3);
+    }
+    
+    .table-bordered > thead > tr > th {
+        border-bottom: 2px solid #337ab7;
+        color: white;
+    }
+    
+    .bg-primary {
+        background-color: #337ab7 !important;
+    }
+    
+    .btn-toolbar {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+</style>

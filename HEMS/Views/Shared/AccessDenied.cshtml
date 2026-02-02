@@ -1,0 +1,59 @@
+@{
+    ViewBag.Title = "Access Denied";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="text-center mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Access Denied
+                    </h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="alert alert-danger">
+                        <h4>You don't have permission to access this resource.</h4>
+                        
+                        @if (ViewData["RequiredRoles"] != null)
+                        {
+                            <p class="mb-2">
+                                <strong>Required Role(s):</strong> @ViewData["RequiredRoles"]
+                            </p>
+                        }
+                        
+                        @if (ViewData["UserRole"] != null)
+                        {
+                            <p class="mb-0">
+                                <strong>Your Role:</strong> @ViewData["UserRole"]
+                            </p>
+                        }
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>What you can do:</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                                    <i class="fas fa-home"></i> Go to Home Page
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="@Url.Action("Logout", "Authentication")" class="btn btn-secondary">
+                                    <i class="fas fa-sign-out-alt"></i> Logout and Login with Different Account
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            If you believe this is an error, please contact your system administrator.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

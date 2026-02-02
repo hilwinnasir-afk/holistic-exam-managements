@@ -1,0 +1,139 @@
+@{
+    ViewBag.Title = "System Maintenance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white text-center py-3">
+                    <i class="fas fa-tools fa-2x mb-2"></i>
+                    <h4 class="mb-0">System Maintenance</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Maintenance Message -->
+                    <div class="alert alert-info border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 text-info"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">The HEMS system is currently under maintenance</h5>
+                                <p class="mb-0">We're performing scheduled maintenance to improve system performance and reliability.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Details -->
+                    @if (ViewBag.MaintenanceStart != null && ViewBag.MaintenanceEnd != null)
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Maintenance Schedule:</h6>
+                            <div class="bg-light p-3 rounded">
+                                <div class="row">
+                                    <div class="col-4 text-muted">Start Time:</div>
+                                    <div class="col-8">@ViewBag.MaintenanceStart</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 text-muted">Expected End:</div>
+                                    <div class="col-8">@ViewBag.MaintenanceEnd</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- What's happening -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">During maintenance:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                All exam data and student progress are safely preserved
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                System performance and security improvements are being applied
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                No data will be lost during this maintenance
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                            <i class="fas fa-redo me-2"></i>Check Again
+                        </button>
+                    </div>
+
+                    <!-- Important Notice -->
+                    <div class="alert alert-warning border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">For Scheduled Exams</h6>
+                                <p class="mb-0">If you have a scheduled exam during this maintenance window, your exam coordinator will provide alternative arrangements. Contact them for more information.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="alert alert-light border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-phone me-3 mt-1 text-secondary"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Need Immediate Assistance?</h6>
+                                <p class="mb-0">Contact your exam coordinator or technical support if you have urgent questions about scheduled exams or system access.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-refresh notice -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            This page will automatically refresh every 5 minutes to check if maintenance is complete.
+                        </small>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Last checked at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh every 5 minutes during maintenance
+    setTimeout(function() {
+        window.location.reload();
+    }, 300000); // 5 minutes
+</script>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+</style>

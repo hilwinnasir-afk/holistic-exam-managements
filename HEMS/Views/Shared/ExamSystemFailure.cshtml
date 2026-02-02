@@ -1,0 +1,146 @@
+@{
+    ViewBag.Title = "Exam System Failure";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h4 class="mb-0">Exam System Failure</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Critical Error Message -->
+                    <div class="alert alert-danger border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-circle me-3 mt-1 text-danger"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">Critical exam system error detected</h5>
+                                <p class="mb-0">A serious error has occurred in the exam system that requires immediate attention.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Immediate Actions -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">IMMEDIATE ACTIONS REQUIRED</h6>
+                                <ol class="mb-0 ps-3">
+                                    <li><strong>DO NOT</strong> close this browser window or tab</li>
+                                    <li><strong>IMMEDIATELY</strong> notify your exam coordinator</li>
+                                    <li><strong>REMAIN</strong> at your workstation until instructed otherwise</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Safety Information -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Your Data Status:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt text-success me-2"></i>
+                                All submitted answers are safely stored
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-save text-success me-2"></i>
+                                Auto-saved progress has been preserved
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-clock text-info me-2"></i>
+                                Your exam timer status has been recorded
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Error Details for Coordinator -->
+                    @if (ViewBag.ErrorDetails != null)
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Error Information (for coordinator):</h6>
+                            <div class="bg-light p-3 rounded">
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Error Type:</div>
+                                    <div class="col-8">@ViewBag.ErrorType</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-4 text-muted">Error ID:</div>
+                                    <div class="col-8"><code>@ViewBag.ErrorId</code></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 text-muted">Student ID:</div>
+                                    <div class="col-8">@ViewBag.StudentId</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Contact Information -->
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-phone me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Emergency Contact</h6>
+                                <p class="mb-2">Immediately contact your exam coordinator using the emergency contact method provided at the beginning of your exam session.</p>
+                                <p class="mb-0">Provide them with the error ID shown above if available.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="alert alert-light border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 text-secondary"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">What Happens Next</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li>Technical support has been automatically notified</li>
+                                    <li>Your coordinator will provide instructions for proceeding</li>
+                                    <li>Your exam progress and time will be fairly considered</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            System failure detected at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+    
+    code {
+        font-size: 0.9em;
+        color: #e83e8c;
+    }
+</style>

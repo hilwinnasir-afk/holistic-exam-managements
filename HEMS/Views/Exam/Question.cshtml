@@ -1,0 +1,1256 @@
+@model HEMS.Models.ExamQuestionViewModel
+@{
+    ViewBag.Title = "Exam - Question " + (Model.AllQuestions.FindIndex(q => q.QuestionId == Model.CurrentQuestionId) + 1);
+    Layout = "~/Views/Shared/_ExamLayout.cshtml";
+}
+
+<div class="exam-container">
+    <!-- Question Palette (Left Side) -->
+    <div class="question-palette">
+        <h4>Questions</h4>
+        <div class="palette-grid">
+            @for (int i = 0; i < Model.AllQuestions.Count; i++)
+            {
+                var question = Model.AllQuestions[i];
+                var studentAnswer = Model.StudentAnswers.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
+                var isAnswered = studentAnswer?.ChoiceId != null;
+                var isFlagged = studentAnswer?.IsFlagged ?? false;
+                var isCurrent = question.QuestionId == Model.CurrentQuestionId;
+                
+                var cssClass = "palette-item";
+                var ariaDescribedBy = new List<string>();
+                var statusText = "";
+                
+                if (isCurrent) 
+                {
+                    cssClass += " current";
+                    statusText += "Current question";
+                }
+                else if (isFlagged && isAnswered) 
+                {
+                    cssClass += " flagged answered";
+                    ariaDescribedBy.Add("flagged");
+                    ariaDescribedBy.Add("answered");
+                    statusText += "Flagged and answered";
+                }
+                else if (isFlagged) 
+                {
+                    cssClass += " flagged";
+                    ariaDescribedBy.Add("flagged");
+                    statusText += "Flagged for review";
+                }
+                else if (isAnswered) 
+                {
+                    cssClass += " answered";
+                    ariaDescribedBy.Add("answered");
+                    statusText += "Answered";
+                }
+                else
+                {
+                    statusText += "Not answered";
+                }
+                
+                <a href="@Url.Action("Question", new { questionId = question.QuestionId })" 
+                   class="@cssClass" 
+                   role="button"
+                   aria-current="@(isCurrent ? "true" : "false")"
+                   aria-describedby="@string.Join(" ", ariaDescribedBy)"
+                   aria-label="Question @(i + 1) of @Model.AllQuestions.Count - @statusText"
+                   title="Question @(i + 1)@(isAnswered ? " - Answered" : "")@(isFlagged ? " - Flagged" : "")">
+                    @(i + 1)
+                    <span class="sr-only">@statusText</span>
+                </a>
+            }
+        </div>
+        
+        <!-- Palette Legend -->
+        <div class="palette-legend">
+            <div class="palette-legend-item">
+                <div class="palette-legend-color current"></div>
+                Current Question
+            </div>
+            <div class="palette-legend-item">
+                <div class="palette-legend-color answered"></div>
+                Answered
+            </div>
+            <div class="palette-legend-item">
+                <div class="palette-legend-color flagged"></div>
+                Flagged for Review
+            </div>
+            <div class="palette-legend-item">
+                <div class="palette-legend-color flagged-answered"></div>
+                Flagged & Answered
+            </div>
+            <div class="palette-legend-item">
+                <div class="palette-legend-color unanswered"></div>
+                Not Answered
+            </div>
+            
+            <!-- Progress Indicator -->
+            <div class="palette-progress">
+                @{
+                    var answeredCount = Model.StudentAnswers.Count(sa => sa.ChoiceId != null);
+                    var totalCount = Model.AllQuestions.Count;
+                    var progressPercentage = totalCount > 0 ? (answeredCount * 100 / totalCount) : 0;
+                }
+                <div class="palette-progress-bar">
+                    <div class="palette-progress-fill" style="width: @(progressPercentage)%"></div>
+                </div>
+                <div class="palette-progress-text">
+                    @answeredCount of @totalCount completed (@progressPercentage%)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Content (Right Side) -->
+    <div class="question-content">
+        <div class="question-card">
+            <!-- Auto-save status indicator -->
+            <div class="auto-save-status" id="autoSaveStatus">
+                <i class="glyphicon glyphicon-refresh"></i>
+                <span class="status-text">Ready</span>
+            </div>
+            
+            <div class="question-number">
+                Question @(Model.AllQuestions.FindIndex(q => q.QuestionId == Model.CurrentQuestionId) + 1) of @Model.AllQuestions.Count
+            </div>
+            
+            <div class="question-text">
+                @Html.Raw(Model.Question.QuestionText)
+            </div>
+
+            <!-- Answer Choices -->
+            <form id="answerForm">
+                @foreach (var choice in Model.Question.Choices.OrderBy(c => c.ChoiceOrder))
+                {
+                    <div class="choice-option @(Model.SelectedChoiceId == choice.ChoiceId ? "selected" : "")" 
+                         onclick="selectChoice(@choice.ChoiceId)">
+                        <input type="radio" 
+                               name="selectedChoice" 
+                               value="@choice.ChoiceId" 
+                               id="choice_@choice.ChoiceId"
+                               @(Model.SelectedChoiceId == choice.ChoiceId ? "checked" : "")
+                               onchange="saveAnswer(@choice.ChoiceId)" />
+                        <label for="choice_@choice.ChoiceId">
+                            @Html.Raw(choice.ChoiceText)
+                        </label>
+                    </div>
+                }
+            </form>
+
+            <!-- Question Navigation -->
+            <div class="question-navigation">
+                <div>
+                    @{
+                        var currentIndex = Model.AllQuestions.FindIndex(q => q.QuestionId == Model.CurrentQuestionId);
+                        var previousQuestion = currentIndex > 0 ? Model.AllQuestions[currentIndex - 1] : null;
+                        var nextQuestion = currentIndex < Model.AllQuestions.Count - 1 ? Model.AllQuestions[currentIndex + 1] : null;
+                    }
+                    
+                    @if (previousQuestion != null)
+                    {
+                        <a href="@Url.Action("Question", new { questionId = previousQuestion.QuestionId })" 
+                           class="btn-exam btn-secondary">
+                            ← Previous
+                        </a>
+                    }
+                </div>
+
+                <div>
+                    <button type="button" 
+                            class="btn-exam @(Model.IsFlagged ? "btn-warning" : "btn-secondary")" 
+                            onclick="toggleFlag()"
+                            id="flagButton">
+                        @(Model.IsFlagged ? "🚩 Unflag" : "🏳️ Flag")
+                    </button>
+                </div>
+
+                <div>
+                    @if (nextQuestion != null)
+                    {
+                        <a href="@Url.Action("Question", new { questionId = nextQuestion.QuestionId })" 
+                           class="btn-exam btn-primary">
+                            Next →
+                        </a>
+                    }
+                    else
+                    {
+                        <button type="button" 
+                                class="btn-exam btn-success" 
+                                onclick="showSubmissionModal()">
+                            Submit Exam
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submission Confirmation Modal -->
+<div id="submissionModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="submissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="submissionModalLabel">
+                    <i class="glyphicon glyphicon-warning-sign"></i>
+                    Confirm Exam Submission
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong><i class="glyphicon glyphicon-exclamation-sign"></i> Important!</strong>
+                    Once you submit your exam, you cannot return to change your answers.
+                </div>
+                
+                <p class="lead">Please review your exam progress before submitting:</p>
+                
+                <!-- Question Statistics -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-success">
+                            <div class="panel-heading">
+                                <h5 class="panel-title">
+                                    <i class="glyphicon glyphicon-ok-circle"></i>
+                                    Answered Questions
+                                </h5>
+                            </div>
+                            <div class="panel-body text-center">
+                                <h2 class="text-success" id="answeredCount">0</h2>
+                                <div id="answeredQuestions" class="question-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel panel-danger">
+                            <div class="panel-heading">
+                                <h5 class="panel-title">
+                                    <i class="glyphicon glyphicon-remove-circle"></i>
+                                    Unanswered Questions
+                                </h5>
+                            </div>
+                            <div class="panel-body text-center">
+                                <h2 class="text-danger" id="unansweredCount">0</h2>
+                                <div id="unansweredQuestions" class="question-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-warning">
+                            <div class="panel-heading">
+                                <h5 class="panel-title">
+                                    <i class="glyphicon glyphicon-flag"></i>
+                                    Flagged Questions
+                                </h5>
+                            </div>
+                            <div class="panel-body text-center">
+                                <h2 class="text-warning" id="flaggedCount">0</h2>
+                                <div id="flaggedQuestions" class="question-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h5 class="panel-title">
+                                    <i class="glyphicon glyphicon-list-alt"></i>
+                                    Total Questions
+                                </h5>
+                            </div>
+                            <div class="panel-body text-center">
+                                <h2 class="text-info" id="totalCount">@Model.AllQuestions.Count</h2>
+                                <small>Completion: <span id="completionRate">0%</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress">
+                    <div class="progress-bar progress-bar-success" role="progressbar" id="progressBar" 
+                         style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        <span class="sr-only">0% Complete</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="glyphicon glyphicon-arrow-left"></i>
+                    Continue Exam
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmSubmitExam()">
+                    <i class="glyphicon glyphicon-ok"></i>
+                    Submit Exam
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <style>
+        .question-list {
+            max-height: 100px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .question-number {
+            display: inline-block;
+            margin: 2px;
+            padding: 4px 8px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .question-number.answered {
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+            color: #3c763d;
+        }
+        
+        .question-number.unanswered {
+            background-color: #f2dede;
+            border-color: #ebccd1;
+            color: #a94442;
+        }
+        
+        .question-number.flagged {
+            background-color: #fcf8e3;
+            border-color: #faebcc;
+            color: #8a6d3b;
+        }
+        
+        .modal-lg {
+            width: 90%;
+            max-width: 900px;
+        }
+        
+        .progress {
+            margin-top: 15px;
+            height: 25px;
+        }
+        
+        .progress-bar {
+            line-height: 25px;
+            font-weight: bold;
+        }
+        
+        /* Mobile-specific modal styles */
+        @@media (max-width: 767px) {
+            .modal-lg {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .modal-content {
+                border-radius: 6px;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-footer {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .row {
+                margin: 0 -5px;
+            }
+            
+            .col-md-6 {
+                padding: 0 5px;
+                margin-bottom: 15px;
+            }
+            
+            .panel {
+                margin-bottom: 10px;
+            }
+            
+            .panel-body {
+                padding: 10px;
+            }
+            
+            .panel-body h2 {
+                font-size: 1.5rem;
+            }
+            
+            .question-list {
+                max-height: 80px;
+                font-size: 0.85rem;
+            }
+            
+            .question-number {
+                padding: 4px 6px;
+                font-size: 0.75rem;
+                margin: 2px;
+            }
+        }
+        
+        @@media (max-width: 575px) {
+            .modal-lg {
+                width: 98%;
+                margin: 2% auto;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 12px 15px;
+            }
+            
+            .modal-title {
+                font-size: 1rem;
+            }
+            
+            .col-md-6 {
+                width: 100%;
+                padding: 0;
+            }
+            
+            .panel-body h2 {
+                font-size: 1.3rem;
+            }
+            
+            .alert {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .lead {
+                font-size: 1rem;
+            }
+        }
+    </style>
+    
+    <script>
+        var currentQuestionId = @Model.CurrentQuestionId;
+        var autoSaveTimeout;
+
+        // Auto-save functionality with network resilience and visual feedback
+        function saveAnswer(choiceId) {
+            clearTimeout(autoSaveTimeout);
+            
+            // Show immediate visual feedback that saving is starting
+            showAutoSaveFeedback('saving', 'Saving answer...');
+            showProgressSaveStatus('saving');
+            
+            autoSaveTimeout = setTimeout(function() {
+                // Use NetworkManager if available, otherwise fallback to direct AJAX
+                if (typeof NetworkManager !== 'undefined') {
+                    NetworkManager.saveAnswerWithRetry(currentQuestionId, choiceId, function(response) {
+                        if (response.success) {
+                            console.log('Answer saved successfully' + (response.offline ? ' (offline)' : ''));
+                            
+                            // Show success feedback
+                            if (response.offline) {
+                                showAutoSaveFeedback('offline', 'Answer saved offline - will sync when connection is restored');
+                                showOfflineIndicator('Answer saved offline - will sync when connection is restored');
+                            } else {
+                                showAutoSaveFeedback('success', 'Answer saved successfully');
+                                showProgressSaveStatus('saved');
+                            }
+                            
+                            // Update palette to show answered status
+                            updatePaletteStatus(currentQuestionId, true);
+                            
+                            // Add visual confirmation to the selected choice
+                            addChoiceConfirmation(choiceId);
+                        } else {
+                            console.error('Failed to save answer:', response.message);
+                            
+                            // Show error feedback
+                            showAutoSaveFeedback('error', 'Failed to save answer: ' + response.message);
+                            
+                            // Check if exam expired
+                            if (response.redirect) {
+                                alert('Time is up! Your exam has been submitted automatically.');
+                                window.location.href = response.redirect;
+                            } else {
+                                showErrorMessage('Failed to save answer: ' + response.message);
+                            }
+                        }
+                    });
+                } else {
+                    // Fallback to direct AJAX if NetworkManager is not available
+                    $.ajax({
+                        url: '@Url.Action("SaveAnswer", "Exam")',
+                        type: 'POST',
+                        data: {
+                            questionId: currentQuestionId,
+                            choiceId: choiceId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                console.log('Answer saved successfully');
+                                
+                                // Show success feedback
+                                showAutoSaveFeedback('success', 'Answer saved successfully');
+                                showProgressSaveStatus('saved');
+                                
+                                // Update palette to show answered status
+                                updatePaletteStatus(currentQuestionId, true);
+                                
+                                // Add visual confirmation to the selected choice
+                                addChoiceConfirmation(choiceId);
+                            } else {
+                                console.error('Failed to save answer:', response.message);
+                                
+                                // Show error feedback
+                                showAutoSaveFeedback('error', 'Failed to save answer: ' + response.message);
+                                
+                                // Check if exam expired
+                                if (response.redirect) {
+                                    alert('Time is up! Your exam has been submitted automatically.');
+                                    window.location.href = response.redirect;
+                                }
+                            }
+                        },
+                        error: function() {
+                            console.error('Error saving answer');
+                            showAutoSaveFeedback('error', 'Network error while saving answer. Please check your connection.');
+                            showErrorMessage('Network error while saving answer. Please check your connection.');
+                        }
+                    });
+                }
+            }, 500); // Save after 500ms of inactivity
+        }
+
+        // Choice selection with enhanced visual feedback
+        function selectChoice(choiceId) {
+            // Remove selected class from all choices
+            $('.choice-option').removeClass('selected');
+            
+            // Add selected class to clicked choice
+            $('#choice_' + choiceId).closest('.choice-option').addClass('selected');
+            
+            // Check the radio button
+            $('#choice_' + choiceId).prop('checked', true);
+            
+            // Add immediate visual feedback for selection
+            addChoiceSelectionFeedback(choiceId);
+            
+            // Save the answer
+            saveAnswer(choiceId);
+        }
+
+        // Flag/unflag functionality with network resilience and visual feedback
+        function toggleFlag() {
+            // Show immediate visual feedback that flag operation is starting
+            showAutoSaveFeedback('saving', 'Updating flag...');
+            
+            // Use NetworkManager if available, otherwise fallback to direct AJAX
+            if (typeof NetworkManager !== 'undefined') {
+                NetworkManager.toggleFlagWithRetry(currentQuestionId, function(response) {
+                    if (response.success) {
+                        var flagButton = $('#flagButton');
+                        if (response.isFlagged) {
+                            flagButton.text('🚩 Unflag').removeClass('btn-secondary').addClass('btn-warning');
+                        } else {
+                            flagButton.text('🏳️ Flag').removeClass('btn-warning').addClass('btn-secondary');
+                        }
+                        
+                        // Update palette to show flagged status
+                        updatePaletteStatus(currentQuestionId, null, response.isFlagged);
+                        
+                        // Show success feedback
+                        if (response.offline) {
+                            showAutoSaveFeedback('offline', 'Flag changed offline - will sync when connection is restored');
+                            showOfflineIndicator('Flag changed offline - will sync when connection is restored');
+                        } else {
+                            showAutoSaveFeedback('success', response.isFlagged ? 'Question flagged' : 'Question unflagged');
+                        }
+                        
+                        // Add visual confirmation to the flag button
+                        addFlagConfirmation(response.isFlagged);
+                    } else {
+                        console.error('Failed to toggle flag:', response.message);
+                        
+                        // Show error feedback
+                        showAutoSaveFeedback('error', 'Failed to toggle flag: ' + response.message);
+                        
+                        // Check if exam expired
+                        if (response.redirect) {
+                            alert('Time is up! Your exam has been submitted automatically.');
+                            window.location.href = response.redirect;
+                        } else {
+                            showErrorMessage('Failed to toggle flag: ' + response.message);
+                        }
+                    }
+                });
+            } else {
+                // Fallback to direct AJAX if NetworkManager is not available
+                $.ajax({
+                    url: '@Url.Action("ToggleFlag", "Exam")',
+                    type: 'POST',
+                    data: {
+                        questionId: currentQuestionId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var flagButton = $('#flagButton');
+                            if (response.isFlagged) {
+                                flagButton.text('🚩 Unflag').removeClass('btn-secondary').addClass('btn-warning');
+                            } else {
+                                flagButton.text('🏳️ Flag').removeClass('btn-warning').addClass('btn-secondary');
+                            }
+                            
+                            // Update palette to show flagged status
+                            updatePaletteStatus(currentQuestionId, null, response.isFlagged);
+                            
+                            // Show success feedback
+                            showAutoSaveFeedback('success', response.isFlagged ? 'Question flagged' : 'Question unflagged');
+                            
+                            // Add visual confirmation to the flag button
+                            addFlagConfirmation(response.isFlagged);
+                        } else {
+                            alert('Failed to toggle flag: ' + response.message);
+                            showAutoSaveFeedback('error', 'Failed to toggle flag: ' + response.message);
+                            
+                            // Check if exam expired
+                            if (response.redirect) {
+                                alert('Time is up! Your exam has been submitted automatically.');
+                                window.location.href = response.redirect;
+                            }
+                        }
+                    },
+                    error: function() {
+                        alert('Error toggling flag');
+                        showAutoSaveFeedback('error', 'Network error while toggling flag');
+                    }
+                });
+            }
+        }
+
+        // Update palette item status with enhanced visual feedback
+        function updatePaletteStatus(questionId, isAnswered, isFlagged) {
+            var paletteItem = $('a[href*="questionId=' + questionId + '"]');
+            
+            if (paletteItem.length > 0) {
+                paletteItem.removeClass('answered flagged');
+                
+                var statusText = "Not answered";
+                var ariaDescribedBy = [];
+                
+                if (isAnswered === true) {
+                    paletteItem.addClass('answered');
+                    ariaDescribedBy.push('answered');
+                    statusText = "Answered";
+                    
+                    // Add visual feedback for successful save
+                    paletteItem.addClass('save-success');
+                    setTimeout(function() {
+                        paletteItem.removeClass('save-success');
+                    }, 1000);
+                }
+                
+                if (isFlagged === true) {
+                    paletteItem.addClass('flagged');
+                    ariaDescribedBy.push('flagged');
+                    statusText = isAnswered ? "Flagged and answered" : "Flagged for review";
+                }
+                
+                // Update ARIA attributes
+                paletteItem.attr('aria-describedby', ariaDescribedBy.join(' '));
+                var questionNumber = paletteItem.text().trim();
+                paletteItem.attr('aria-label', 'Question ' + questionNumber + ' of @Model.AllQuestions.Count - ' + statusText);
+                
+                // Update screen reader text
+                var srText = paletteItem.find('.sr-only');
+                if (srText.length === 0) {
+                    srText = $('<span class="sr-only"></span>');
+                    paletteItem.append(srText);
+                }
+                srText.text(statusText);
+                
+                // Update progress indicator
+                updateProgressIndicator();
+            }
+        }
+
+        // Update progress indicator with save status feedback
+        function updateProgressIndicator() {
+            var totalQuestions = @Model.AllQuestions.Count;
+            var answeredCount = $('.palette-item.answered').length;
+            var progressPercentage = totalQuestions > 0 ? Math.round((answeredCount * 100) / totalQuestions) : 0;
+            
+            // Update progress bar
+            $('.palette-progress-fill').css('width', progressPercentage + '%');
+            
+            // Update progress text
+            var progressText = $('.palette-progress-text');
+            progressText.text(answeredCount + ' of ' + totalQuestions + ' completed (' + progressPercentage + '%)');
+            
+            // Add completion milestone celebrations
+            if (progressPercentage === 25 || progressPercentage === 50 || progressPercentage === 75 || progressPercentage === 100) {
+                celebrateProgress(progressPercentage);
+            }
+        }
+
+        // Show temporary save status in progress text
+        function showProgressSaveStatus(status) {
+            var progressText = $('.palette-progress-text');
+            
+            // Remove existing save status classes
+            progressText.removeClass('saving saved');
+            
+            if (status === 'saving') {
+                progressText.addClass('saving');
+            } else if (status === 'saved') {
+                progressText.addClass('saved');
+                setTimeout(function() {
+                    progressText.removeClass('saved');
+                }, 2000);
+            }
+        }
+
+        // Celebrate progress milestones
+        function celebrateProgress(percentage) {
+            var progressBar = $('.palette-progress-fill');
+            var originalBackground = progressBar.css('background');
+            
+            // Flash effect for milestone
+            progressBar.css('background', 'linear-gradient(90deg, #ffc107, #fd7e14)');
+            setTimeout(function() {
+                progressBar.css('background', originalBackground);
+            }, 1000);
+            
+            // Show encouraging message
+            var messages = {
+                25: "Great start! 25% complete 🌟",
+                50: "Halfway there! 50% complete 🎯",
+                75: "Almost done! 75% complete 🚀",
+                100: "Excellent! All questions answered ✅"
+            };
+            
+            if (messages[percentage]) {
+                showProgressMessage(messages[percentage]);
+            }
+        }
+
+        // Show progress message
+        function showProgressMessage(message) {
+            // Remove any existing progress messages
+            $('.progress-message').remove();
+            
+            // Create and show progress message
+            var messageDiv = $('<div class="progress-message alert alert-success" style="position: fixed; top: 120px; right: 20px; z-index: 9999; max-width: 300px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">' +
+                '<i class="glyphicon glyphicon-star"></i> ' + message +
+                '<button type="button" class="close" onclick="$(this).parent().remove();">' +
+                '<span>&times;</span>' +
+                '</button>' +
+                '</div>');
+            
+            $('body').append(messageDiv);
+            
+            // Auto-hide after 4 seconds
+            setTimeout(function() {
+                messageDiv.fadeOut(function() {
+                    messageDiv.remove();
+                });
+            }, 4000);
+        }
+
+        // Submit exam
+        function submitExam() {
+            if (confirm('Are you sure you want to submit your exam? You cannot change your answers after submission.')) {
+                // Redirect to submit exam action
+                window.location.href = '@Url.Action("SubmitExam", "Exam")';
+            }
+        }
+
+        // Show submission modal with detailed statistics
+        function showSubmissionModal() {
+            // Calculate statistics
+            var totalQuestions = @Model.AllQuestions.Count;
+            var answeredQuestions = [];
+            var unansweredQuestions = [];
+            var flaggedQuestions = [];
+            
+            @for (int i = 0; i < Model.AllQuestions.Count; i++)
+            {
+                var question = Model.AllQuestions[i];
+                var studentAnswer = Model.StudentAnswers.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
+                var isAnswered = studentAnswer?.ChoiceId != null;
+                var isFlagged = studentAnswer?.IsFlagged ?? false;
+                var questionNumber = i + 1;
+                
+                <text>
+                @if (isAnswered)
+                {
+                    <text>answeredQuestions.push(@questionNumber);</text>
+                }
+                else
+                {
+                    <text>unansweredQuestions.push(@questionNumber);</text>
+                }
+                
+                @if (isFlagged)
+                {
+                    <text>flaggedQuestions.push(@questionNumber);</text>
+                }
+                </text>
+            }
+            
+            // Update counts
+            $('#answeredCount').text(answeredQuestions.length);
+            $('#unansweredCount').text(unansweredQuestions.length);
+            $('#flaggedCount').text(flaggedQuestions.length);
+            $('#totalCount').text(totalQuestions);
+            
+            // Calculate completion rate
+            var completionRate = Math.round((answeredQuestions.length / totalQuestions) * 100);
+            $('#completionRate').text(completionRate + '%');
+            
+            // Update progress bar
+            $('#progressBar').css('width', completionRate + '%')
+                           .attr('aria-valuenow', completionRate)
+                           .find('.sr-only').text(completionRate + '% Complete');
+            
+            // Populate question lists
+            populateQuestionList('#answeredQuestions', answeredQuestions, 'answered');
+            populateQuestionList('#unansweredQuestions', unansweredQuestions, 'unanswered');
+            populateQuestionList('#flaggedQuestions', flaggedQuestions, 'flagged');
+            
+            // Show modal
+            $('#submissionModal').modal('show');
+        }
+        
+        // Populate question number lists
+        function populateQuestionList(containerId, questions, cssClass) {
+            var container = $(containerId);
+            container.empty();
+            
+            if (questions.length === 0) {
+                container.html('<small class="text-muted">None</small>');
+                return;
+            }
+            
+            questions.forEach(function(questionNum) {
+                var span = $('<span class="question-number ' + cssClass + '">' + questionNum + '</span>');
+                container.append(span);
+            });
+        }
+        
+        // Confirm and submit exam
+        function confirmSubmitExam() {
+            $('#submissionModal').modal('hide');
+            
+            // Show loading indicator
+            var submitBtn = $('button[onclick="confirmSubmitExam()"]');
+            submitBtn.prop('disabled', true)
+                     .html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Submitting...');
+            
+            // Submit exam
+            window.location.href = '@Url.Action("SubmitExam", "Exam")';
+        }
+
+        // Prevent accidental page refresh/navigation
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = 'Are you sure you want to leave? Your progress will be saved but you may lose time.';
+        });
+
+        // Auto-save on page unload
+        window.addEventListener('unload', function() {
+            var selectedChoice = $('input[name="selectedChoice"]:checked').val();
+            if (selectedChoice) {
+                // Use synchronous request for unload
+                $.ajax({
+                    url: '@Url.Action("SaveAnswer", "Exam")',
+                    type: 'POST',
+                    async: false,
+                    data: {
+                        questionId: currentQuestionId,
+                        choiceId: selectedChoice
+                    }
+                });
+            }
+        });
+
+        // Touch and mobile enhancements
+        $(document).ready(function() {
+            // Initialize progress indicator
+            updateProgressIndicator();
+            
+            // Add touch-friendly interactions
+            initializeTouchEnhancements();
+            
+            // Add keyboard shortcuts info for desktop users
+            if (window.innerWidth > 768) {
+                addKeyboardShortcutsInfo();
+            }
+            
+            // Handle orientation changes on mobile
+            $(window).on('orientationchange', function() {
+                setTimeout(function() {
+                    // Recalculate layout after orientation change
+                    $(window).trigger('resize');
+                    updateProgressIndicator();
+                }, 100);
+            });
+            
+            // Add palette item hover effects for desktop
+            if (window.matchMedia('(hover: hover)').matches) {
+                $('.palette-item').hover(
+                    function() {
+                        $(this).addClass('palette-hover');
+                    },
+                    function() {
+                        $(this).removeClass('palette-hover');
+                    }
+                );
+            }
+        });
+        
+        function initializeTouchEnhancements() {
+            // Add touch feedback for choice options
+            $('.choice-option').on('touchstart', function() {
+                $(this).addClass('touch-active');
+            }).on('touchend touchcancel', function() {
+                $(this).removeClass('touch-active');
+            });
+            
+            // Add touch feedback for palette items
+            $('.palette-item').on('touchstart', function() {
+                $(this).addClass('touch-active');
+            }).on('touchend touchcancel', function() {
+                $(this).removeClass('touch-active');
+            });
+            
+            // Add touch feedback for buttons
+            $('.btn-exam').on('touchstart', function() {
+                $(this).addClass('touch-active');
+            }).on('touchend touchcancel', function() {
+                $(this).removeClass('touch-active');
+            });
+            
+            // Prevent double-tap zoom on buttons and interactive elements
+            $('.btn-exam, .choice-option, .palette-item').on('touchend', function(e) {
+                e.preventDefault();
+                $(this).trigger('click');
+            });
+        }
+        
+        function addKeyboardShortcutsInfo() {
+            // Add a small info panel for keyboard shortcuts
+            var shortcutsInfo = $('<div class="keyboard-shortcuts-info">' +
+                '<small><strong>Keyboard shortcuts:</strong> ← → (navigate), F (flag), 1-5 (select choice)</small>' +
+                '</div>');
+            $('.question-card').append(shortcutsInfo);
+        }
+
+        // Enhanced keyboard navigation
+        $(document).keydown(function(e) {
+            if (e.ctrlKey || e.altKey) return; // Ignore if Ctrl or Alt is pressed
+            
+            switch(e.which) {
+                case 37: // Left arrow - Previous question
+                    e.preventDefault();
+                    var prevLink = $('.question-navigation a:contains("Previous")');
+                    if (prevLink.length > 0) {
+                        window.location.href = prevLink.attr('href');
+                    }
+                    break;
+                    
+                case 39: // Right arrow - Next question
+                    e.preventDefault();
+                    var nextLink = $('.question-navigation a:contains("Next")');
+                    if (nextLink.length > 0) {
+                        window.location.href = nextLink.attr('href');
+                    }
+                    break;
+                    
+                case 70: // F key - Flag/unflag
+                    e.preventDefault();
+                    toggleFlag();
+                    break;
+                    
+                case 49: case 50: case 51: case 52: case 53: // Number keys 1-5
+                    e.preventDefault();
+                    var choiceIndex = e.which - 49; // Convert to 0-based index
+                    var choices = $('input[name="selectedChoice"]');
+                    if (choiceIndex < choices.length) {
+                        var choiceId = $(choices[choiceIndex]).val();
+                        selectChoice(choiceId);
+                    }
+                    break;
+                    
+                case 83: // S key - Submit exam (with confirmation)
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        showSubmissionModal();
+                    }
+                    break;
+                    
+                case 72: // H key - Show help/shortcuts
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        showKeyboardShortcuts();
+                    }
+                    break;
+            }
+        });
+
+        // Show keyboard shortcuts modal
+        function showKeyboardShortcuts() {
+            var shortcutsModal = $('<div class="modal fade" tabindex="-1" role="dialog">' +
+                '<div class="modal-dialog" role="document">' +
+                '<div class="modal-content">' +
+                '<div class="modal-header">' +
+                '<h4 class="modal-title">Keyboard Shortcuts</h4>' +
+                '<button type="button" class="close" data-dismiss="modal">&times;</button>' +
+                '</div>' +
+                '<div class="modal-body">' +
+                '<div class="row">' +
+                '<div class="col-md-6">' +
+                '<h5>Navigation</h5>' +
+                '<ul class="list-unstyled">' +
+                '<li><kbd>←</kbd> Previous question</li>' +
+                '<li><kbd>→</kbd> Next question</li>' +
+                '<li><kbd>Tab</kbd> Navigate elements</li>' +
+                '</ul>' +
+                '</div>' +
+                '<div class="col-md-6">' +
+                '<h5>Actions</h5>' +
+                '<ul class="list-unstyled">' +
+                '<li><kbd>F</kbd> Flag/unflag question</li>' +
+                '<li><kbd>1-5</kbd> Select answer choice</li>' +
+                '<li><kbd>Shift+S</kbd> Submit exam</li>' +
+                '<li><kbd>Shift+H</kbd> Show this help</li>' +
+                '</ul>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>');
+            
+            $('body').append(shortcutsModal);
+            shortcutsModal.modal('show');
+            
+            // Remove modal after closing
+            shortcutsModal.on('hidden.bs.modal', function() {
+                shortcutsModal.remove();
+            });
+        }
+
+        // Helper function to show offline indicator
+        function showOfflineIndicator(message) {
+            // Remove any existing offline indicators
+            $('.offline-indicator').remove();
+            
+            // Create and show offline indicator
+            var indicator = $('<div class="offline-indicator alert alert-warning" style="position: fixed; top: 90px; right: 20px; z-index: 9999; max-width: 300px;">' +
+                '<i class="glyphicon glyphicon-cloud"></i> ' + message +
+                '<button type="button" class="close" onclick="$(this).parent().remove();">' +
+                '<span>&times;</span>' +
+                '</button>' +
+                '</div>');
+            
+            $('body').append(indicator);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(function() {
+                indicator.fadeOut(function() {
+                    indicator.remove();
+                });
+            }, 5000);
+        }
+
+        // Helper function to show error messages
+        function showErrorMessage(message) {
+            // Remove any existing error messages
+            $('.error-indicator').remove();
+            
+            // Create and show error indicator
+            var indicator = $('<div class="error-indicator alert alert-danger" style="position: fixed; top: 90px; right: 20px; z-index: 9999; max-width: 300px;">' +
+                '<i class="glyphicon glyphicon-exclamation-sign"></i> ' + message +
+                '<button type="button" class="close" onclick="$(this).parent().remove();">' +
+                '<span>&times;</span>' +
+                '</button>' +
+                '</div>');
+            
+            $('body').append(indicator);
+            
+            // Auto-hide after 8 seconds
+            setTimeout(function() {
+                indicator.fadeOut(function() {
+                    indicator.remove();
+                });
+            }, 8000);
+        }
+
+        // Show auto-save feedback with different states
+        function showAutoSaveFeedback(state, message) {
+            // Remove any existing auto-save feedback
+            $('.auto-save-feedback').remove();
+            
+            var iconClass, alertClass, autoHideDelay;
+            
+            switch(state) {
+                case 'saving':
+                    iconClass = 'glyphicon-refresh glyphicon-spin';
+                    alertClass = 'alert-info';
+                    autoHideDelay = null; // Don't auto-hide saving state
+                    break;
+                case 'success':
+                    iconClass = 'glyphicon-ok';
+                    alertClass = 'alert-success';
+                    autoHideDelay = 3000;
+                    break;
+                case 'offline':
+                    iconClass = 'glyphicon-cloud';
+                    alertClass = 'alert-warning';
+                    autoHideDelay = 5000;
+                    break;
+                case 'error':
+                    iconClass = 'glyphicon-exclamation-sign';
+                    alertClass = 'alert-danger';
+                    autoHideDelay = 8000;
+                    break;
+                default:
+                    iconClass = 'glyphicon-info-sign';
+                    alertClass = 'alert-info';
+                    autoHideDelay = 4000;
+            }
+            
+            // Update the auto-save status indicator
+            updateAutoSaveStatus(state, message);
+            
+            // Create feedback indicator
+            var feedback = $('<div class="auto-save-feedback alert ' + alertClass + '" style="position: fixed; top: 90px; right: 20px; z-index: 9999; max-width: 320px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;">' +
+                '<i class="glyphicon ' + iconClass + '"></i> ' + message +
+                '<button type="button" class="close" onclick="$(this).parent().remove();" style="margin-left: 10px;">' +
+                '<span>&times;</span>' +
+                '</button>' +
+                '</div>');
+            
+            $('body').append(feedback);
+            
+            // Auto-hide if specified
+            if (autoHideDelay) {
+                setTimeout(function() {
+                    feedback.fadeOut(function() {
+                        feedback.remove();
+                    });
+                }, autoHideDelay);
+            }
+            
+            return feedback;
+        }
+
+        // Update auto-save status indicator
+        function updateAutoSaveStatus(state, message) {
+            var statusIndicator = $('#autoSaveStatus');
+            var statusIcon = statusIndicator.find('.glyphicon');
+            var statusText = statusIndicator.find('.status-text');
+            
+            // Remove all state classes
+            statusIndicator.removeClass('saving saved error offline');
+            statusIcon.removeClass('glyphicon-refresh glyphicon-spin glyphicon-ok glyphicon-exclamation-sign glyphicon-cloud');
+            
+            switch(state) {
+                case 'saving':
+                    statusIndicator.addClass('saving');
+                    statusIcon.addClass('glyphicon-refresh glyphicon-spin');
+                    statusText.text('Saving...');
+                    break;
+                case 'success':
+                    statusIndicator.addClass('saved');
+                    statusIcon.addClass('glyphicon-ok');
+                    statusText.text('Saved');
+                    // Auto-hide after 2 seconds
+                    setTimeout(function() {
+                        statusIndicator.removeClass('saved');
+                        statusIcon.removeClass('glyphicon-ok').addClass('glyphicon-refresh');
+                        statusText.text('Ready');
+                    }, 2000);
+                    break;
+                case 'offline':
+                    statusIndicator.addClass('offline');
+                    statusIcon.addClass('glyphicon-cloud');
+                    statusText.text('Offline');
+                    break;
+                case 'error':
+                    statusIndicator.addClass('error');
+                    statusIcon.addClass('glyphicon-exclamation-sign');
+                    statusText.text('Error');
+                    // Auto-hide after 3 seconds
+                    setTimeout(function() {
+                        statusIndicator.removeClass('error');
+                        statusIcon.removeClass('glyphicon-exclamation-sign').addClass('glyphicon-refresh');
+                        statusText.text('Ready');
+                    }, 3000);
+                    break;
+                default:
+                    statusIcon.addClass('glyphicon-refresh');
+                    statusText.text('Ready');
+            }
+        }
+
+        // Add visual confirmation to selected choice
+        function addChoiceSelectionFeedback(choiceId) {
+            var choiceElement = $('#choice_' + choiceId).closest('.choice-option');
+            
+            // Add selection animation
+            choiceElement.addClass('choice-selecting');
+            
+            setTimeout(function() {
+                choiceElement.removeClass('choice-selecting');
+            }, 300);
+        }
+
+        // Add visual confirmation after successful save
+        function addChoiceConfirmation(choiceId) {
+            var choiceElement = $('#choice_' + choiceId).closest('.choice-option');
+            
+            // Add confirmation animation
+            choiceElement.addClass('choice-confirmed');
+            
+            setTimeout(function() {
+                choiceElement.removeClass('choice-confirmed');
+            }, 1000);
+        }
+
+        // Add visual confirmation to flag button
+        function addFlagConfirmation(isFlagged) {
+            var flagButton = $('#flagButton');
+            
+            // Add confirmation animation
+            flagButton.addClass('flag-confirmed');
+            
+            setTimeout(function() {
+                flagButton.removeClass('flag-confirmed');
+            }, 800);
+        }
+    </script>
+}

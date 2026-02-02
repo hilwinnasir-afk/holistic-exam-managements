@@ -1,0 +1,375 @@
+@{
+    ViewBag.Title = "Database Optimization";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    var metrics = ViewBag.Metrics as HEMS.Services.DatabasePerformanceMetrics;
+    var optimizationsApplied = (bool)ViewBag.OptimizationsApplied;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h2><i class="fa fa-database"></i> Database Optimization</h2>
+                <p class="text-muted">Monitor and optimize database performance for the HEMS application</p>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fa fa-check-circle"></i> @Html.Raw(TempData["SuccessMessage"])
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fa fa-exclamation-triangle"></i> @Html.Raw(TempData["ErrorMessage"])
+                </div>
+            }
+
+            <!-- Optimization Status -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-@(optimizationsApplied ? "success" : "warning")">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <i class="fa fa-@(optimizationsApplied ? "check-circle" : "exclamation-triangle")"></i>
+                                Optimization Status
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                            @if (optimizationsApplied)
+                            {
+                                <div class="alert alert-success">
+                                    <i class="fa fa-check-circle"></i>
+                                    <strong>Database optimizations are applied.</strong> 
+                                    Your database is configured with performance indexes for optimal query execution.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                    <strong>Database optimizations are not fully applied.</strong> 
+                                    Consider applying optimizations to improve system performance, especially during concurrent exam sessions.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            @if (metrics != null && string.IsNullOrEmpty(metrics.ErrorMessage))
+            {
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><i class="fa fa-chart-bar"></i> Index Usage Statistics</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="metric-box">
+                                            <h4>@metrics.TotalIndexes</h4>
+                                            <p class="text-muted">Total Indexes</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="metric-box">
+                                            <h4>@metrics.UsedIndexes</h4>
+                                            <p class="text-muted">Active Indexes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-@(metrics.IndexUsagePercentage >= 80 ? "success" : metrics.IndexUsagePercentage >= 60 ? "warning" : "danger")" 
+                                         style="width: @(metrics.IndexUsagePercentage)%">
+                                        @(metrics.IndexUsagePercentage.ToString("F1"))% Index Usage
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><i class="fa fa-table"></i> Table Statistics</h3>
+                            </div>
+                            <div class="panel-body">
+                                @if (metrics.TableStatistics != null && metrics.TableStatistics.Any())
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-condensed">
+                                            <thead>
+                                                <tr>
+                                                    <th>Table</th>
+                                                    <th class="text-right">Rows</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var stat in metrics.TableStatistics)
+                                                {
+                                                    <tr>
+                                                        <td>@stat.Key</td>
+                                                        <td class="text-right">@stat.Value.ToString()</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No table statistics available.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Optimization Actions -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><i class="fa fa-cogs"></i> Optimization Actions</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <!-- Full Optimization -->
+                                <div class="col-md-6">
+                                    <div class="optimization-card">
+                                        <h4><i class="fa fa-rocket"></i> Complete Optimization</h4>
+                                        <p>Apply all database optimizations including indexes for authentication, exam access, grading, and statistics updates.</p>
+                                        <div class="optimization-benefits">
+                                            <strong>Expected Improvements:</strong>
+                                            <ul>
+                                                <li>60-80% faster authentication</li>
+                                                <li>70-85% faster exam access</li>
+                                                <li>50-70% faster question navigation</li>
+                                                <li>40-60% faster grading</li>
+                                            </ul>
+                                        </div>
+                                        @using (Html.BeginForm("ApplyOptimizations", "Coordinator", FormMethod.Post, new { @class = "optimization-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('This will apply all database optimizations. Continue?')">
+                                                <i class="fa fa-rocket"></i> Apply All Optimizations
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Statistics Update -->
+                                <div class="col-md-6">
+                                    <div class="optimization-card">
+                                        <h4><i class="fa fa-chart-line"></i> Update Statistics</h4>
+                                        <p>Update database statistics to ensure optimal query execution plans. Recommended after significant data changes.</p>
+                                        <div class="optimization-benefits">
+                                            <strong>When to Use:</strong>
+                                            <ul>
+                                                <li>After importing large student batches</li>
+                                                <li>After major exam sessions</li>
+                                                <li>Monthly maintenance</li>
+                                                <li>When queries seem slower</li>
+                                            </ul>
+                                        </div>
+                                        @using (Html.BeginForm("UpdateStatistics", "Coordinator", FormMethod.Post, new { @class = "optimization-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-info">
+                                                <i class="fa fa-chart-line"></i> Update Statistics
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Authentication Optimization -->
+                                <div class="col-md-4">
+                                    <div class="optimization-card">
+                                        <h4><i class="fa fa-key"></i> Authentication</h4>
+                                        <p>Optimize login performance for both Phase 1 and Phase 2 authentication.</p>
+                                        @using (Html.BeginForm("OptimizeAuthentication", "Coordinator", FormMethod.Post, new { @class = "optimization-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fa fa-key"></i> Optimize Login
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Exam Access Optimization -->
+                                <div class="col-md-4">
+                                    <div class="optimization-card">
+                                        <h4><i class="fa fa-file-alt"></i> Exam Access</h4>
+                                        <p>Optimize exam loading, question navigation, and answer saving operations.</p>
+                                        @using (Html.BeginForm("OptimizeExamAccess", "Coordinator", FormMethod.Post, new { @class = "optimization-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fa fa-file-alt"></i> Optimize Exams
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Grading Optimization -->
+                                <div class="col-md-4">
+                                    <div class="optimization-card">
+                                        <h4><i class="fa fa-calculator"></i> Grading</h4>
+                                        <p>Optimize automatic grading and score calculation performance.</p>
+                                        @using (Html.BeginForm("OptimizeGrading", "Coordinator", FormMethod.Post, new { @class = "optimization-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fa fa-calculator"></i> Optimize Grading
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Tips -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title"><i class="fa fa-lightbulb"></i> Performance Tips</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5><i class="fa fa-clock"></i> Best Practices</h5>
+                                    <ul>
+                                        <li>Apply optimizations before major exam sessions</li>
+                                        <li>Update statistics monthly or after large data imports</li>
+                                        <li>Monitor index usage regularly</li>
+                                        <li>Consider optimization during low-usage periods</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5><i class="fa fa-exclamation-triangle"></i> Important Notes</h5>
+                                    <ul>
+                                        <li>Optimization may take a few minutes to complete</li>
+                                        <li>Performance improvements are immediate after completion</li>
+                                        <li>Safe to run during normal operations</li>
+                                        <li>Indexes are created only if they don't already exist</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (metrics != null)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="text-muted text-center">
+                            <small>Last updated: @metrics.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+.metric-box {
+    text-align: center;
+    padding: 15px;
+}
+
+.metric-box h4 {
+    font-size: 2.5em;
+    margin: 0;
+    color: #337ab7;
+}
+
+.optimization-card {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px;
+    height: 100%;
+    background-color: #f9f9f9;
+}
+
+.optimization-card h4 {
+    color: #337ab7;
+    margin-top: 0;
+}
+
+.optimization-benefits {
+    margin: 15px 0;
+    font-size: 0.9em;
+}
+
+.optimization-benefits ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.optimization-form {
+    margin-top: 15px;
+}
+
+.page-header {
+    border-bottom: 2px solid #337ab7;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+.page-header h2 {
+    color: #337ab7;
+    margin-top: 0;
+}
+
+.panel-heading .fa {
+    margin-right: 8px;
+}
+
+.btn .fa {
+    margin-right: 5px;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Add loading state to optimization buttons
+    $('.optimization-form').on('submit', function() {
+        var $btn = $(this).find('button[type="submit"]');
+        var originalText = $btn.html();
+        
+        $btn.prop('disabled', true)
+            .html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+        
+        // Re-enable button after 30 seconds as fallback
+        setTimeout(function() {
+            $btn.prop('disabled', false).html(originalText);
+        }, 30000);
+    });
+    
+    // Auto-dismiss alerts after 10 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 10000);
+});
+</script>

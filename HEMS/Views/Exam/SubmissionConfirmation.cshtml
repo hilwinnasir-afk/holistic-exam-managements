@@ -1,0 +1,245 @@
+@model HEMS.Models.StudentExam
+@{
+    ViewBag.Title = "Exam Submitted Successfully";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <!-- Success/Warning Header -->
+            @if (TempData["AutoSubmitted"] != null && (bool)TempData["AutoSubmitted"])
+            {
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4><i class="glyphicon glyphicon-time"></i> Time Expired - Auto Submitted</h4>
+                    <p>Your exam was automatically submitted because the time limit was reached. All your answers have been saved.</p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4><i class="glyphicon glyphicon-ok-circle"></i> Exam Submitted Successfully</h4>
+                    <p>Congratulations! Your exam has been submitted successfully and securely saved.</p>
+                </div>
+            }
+
+            <!-- Main Content Panel -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-list-alt"></i>
+                        Submission Summary - @Model.Exam.Title
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    
+                    <!-- Submission Statistics -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="panel panel-success">
+                                <div class="panel-body text-center">
+                                    <h2 class="text-success">@ViewBag.AnsweredQuestions</h2>
+                                    <p><strong>Answered</strong></p>
+                                    <small>Questions with responses</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="panel panel-danger">
+                                <div class="panel-body text-center">
+                                    <h2 class="text-danger">@ViewBag.UnansweredQuestions</h2>
+                                    <p><strong>Unanswered</strong></p>
+                                    <small>Questions left blank</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="panel panel-warning">
+                                <div class="panel-body text-center">
+                                    <h2 class="text-warning">@ViewBag.FlaggedQuestions</h2>
+                                    <p><strong>Flagged</strong></p>
+                                    <small>Questions marked for review</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="panel panel-info">
+                                <div class="panel-body text-center">
+                                    <h2 class="text-info">@ViewBag.TotalQuestions</h2>
+                                    <p><strong>Total</strong></p>
+                                    <small>Questions in exam</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            @{
+                                var completionRate = (double)ViewBag.AnsweredQuestions / ViewBag.TotalQuestions * 100;
+                            }
+                            <h4>Completion Rate: @completionRate.ToString("F1")%</h4>
+                            <div class="progress progress-striped">
+                                <div class="progress-bar progress-bar-success" role="progressbar" 
+                                     style="width: @completionRate.ToString("F1")%" 
+                                     aria-valuenow="@completionRate.ToString("F1")" aria-valuemin="0" aria-valuemax="100">
+                                    @completionRate.ToString("F1")% Complete
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4><i class="glyphicon glyphicon-info-sign"></i> Exam Information</h4>
+                            <table class="table table-bordered table-striped">
+                                <tr>
+                                    <td><strong>Exam Title:</strong></td>
+                                    <td>@Model.Exam.Title</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Academic Year:</strong></td>
+                                    <td>@Model.Exam.AcademicYear</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Duration:</strong></td>
+                                    <td>@Model.Exam.DurationMinutes minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Student ID:</strong></td>
+                                    <td>@Model.Student.IdNumber</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>@Model.Student.UniversityEmail</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h4><i class="glyphicon glyphicon-time"></i> Timing Information</h4>
+                            <table class="table table-bordered table-striped">
+                                <tr>
+                                    <td><strong>Started At:</strong></td>
+                                    <td>@Model.StartDateTime.ToString("MMM dd, yyyy hh:mm:ss tt")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Submitted At:</strong></td>
+                                    <td>@Model.SubmitDateTime?.ToString("MMM dd, yyyy hh:mm:ss tt")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Time Taken:</strong></td>
+                                    <td>
+                                        @if (Model.SubmitDateTime.HasValue)
+                                        {
+                                            var duration = Model.SubmitDateTime.Value - Model.StartDateTime;
+                                            <text>@duration.Hours hours @duration.Minutes minutes @duration.Seconds seconds</text>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Submission ID:</strong></td>
+                                    <td><code>@Model.StudentExamId</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="label label-success">
+                                            <i class="glyphicon glyphicon-ok"></i> Submitted
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Next Steps Information -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <i class="glyphicon glyphicon-info-sign"></i>
+                                        What Happens Next?
+                                    </h4>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5><i class="glyphicon glyphicon-lock"></i> Security & Storage</h5>
+                                            <ul class="list-unstyled">
+                                                <li><i class="glyphicon glyphicon-ok text-success"></i> Your answers have been securely saved</li>
+                                                <li><i class="glyphicon glyphicon-ok text-success"></i> Submission cannot be changed or modified</li>
+                                                <li><i class="glyphicon glyphicon-ok text-success"></i> Data is encrypted and backed up</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5><i class="glyphicon glyphicon-cog"></i> Grading & Results</h5>
+                                            <ul class="list-unstyled">
+                                                <li><i class="glyphicon glyphicon-time text-info"></i> Automatic grading will begin shortly</li>
+                                                <li><i class="glyphicon glyphicon-time text-info"></i> Results will be available after review</li>
+                                                <li><i class="glyphicon glyphicon-envelope text-info"></i> You will be notified when results are ready</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <div class="btn-group" role="group">
+                                <a href="@Url.Action("StudentDashboard", "Home")" class="btn btn-primary btn-lg">
+                                    <i class="glyphicon glyphicon-home"></i>
+                                    Return to Dashboard
+                                </a>
+                                <button type="button" class="btn btn-default btn-lg" onclick="window.print()">
+                                    <i class="glyphicon glyphicon-print"></i>
+                                    Print Confirmation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .panel-success .panel-heading {
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+        color: #3c763d;
+    }
+    
+    .table-bordered td {
+        vertical-align: middle;
+    }
+    
+    .progress-striped .progress-bar {
+        background-image: linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+        background-size: 40px 40px;
+    }
+    
+    .btn-group .btn {
+        margin: 5px;
+    }
+    
+    @@media print {
+        .btn-group {
+            display: none;
+        }
+        .alert .close {
+            display: none;
+        }
+    }
+</style>

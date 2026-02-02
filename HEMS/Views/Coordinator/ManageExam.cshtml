@@ -1,0 +1,339 @@
+@model HEMS.Models.ViewModels.ExamManageViewModel
+@{
+    ViewBag.Title = "Manage Exam";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Success/Error Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <i class="glyphicon glyphicon-ok-sign"></i>
+                    @Html.Raw(TempData["SuccessMessage"])
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <i class="glyphicon glyphicon-exclamation-sign"></i>
+                    @Html.Raw(TempData["ErrorMessage"])
+                </div>
+            }
+
+            @if (TempData["WarningMessage"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <i class="glyphicon glyphicon-warning-sign"></i>
+                    @Html.Raw(TempData["WarningMessage"])
+                </div>
+            }
+
+            <!-- Exam Information Panel -->
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-file-text"></i>
+                        Exam Information
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Title:</strong> @Model.Exam.Title</p>
+                            <p><strong>Academic Year:</strong> @Model.Exam.AcademicYear</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Duration:</strong> @Model.Exam.DurationMinutes minutes</p>
+                            <p><strong>Status:</strong> 
+                                @if (Model.Exam.IsPublished)
+                                {
+                                    <span class="label label-success">Published</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-warning">Draft</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p><strong>Total Questions:</strong> @Model.TotalQuestions</p>
+                            @if (!Model.Exam.IsPublished)
+                            {
+                                @using (Html.BeginForm("PublishExam", "Coordinator", FormMethod.Post, new { @class = "form-inline" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("examId", Model.Exam.ExamId)
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to publish this exam? Once published, you cannot add or modify questions.')">
+                                        <i class="glyphicon glyphicon-globe"></i>
+                                        Publish Exam
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <!-- Exam Session Password Generation -->
+                                <div class="panel panel-warning" style="margin-top: 15px;">
+                                    <div class="panel-heading">
+                                        <h4 class="panel-title">
+                                            <i class="glyphicon glyphicon-key"></i>
+                                            Exam Session Management
+                                        </h4>
+                                    </div>
+                                    <div class="panel-body">
+                                        @using (Html.BeginForm("GenerateExamPassword", "Coordinator", FormMethod.Post, new { @class = "form-inline" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("examId", Model.Exam.ExamId)
+                                            <div class="form-group">
+                                                <label for="sessionPassword">Session Password:</label>
+                                                <input type="text" name="sessionPassword" class="form-control" placeholder="Enter session password" required style="margin-left: 10px; margin-right: 10px;" />
+                                            </div>
+                                            <div class="form-group" style="margin-top: 15px;">
+                                                <button type="submit" class="btn btn-warning">
+                                                    <i class="glyphicon glyphicon-key"></i>
+                                                    Generate Session Password
+                                                </button>
+                                            </div>
+                                        }
+                                        <p class="help-block" style="margin-top: 10px;">
+                                            <i class="glyphicon glyphicon-info-sign"></i>
+                                            Generate a session password for Phase 2 authentication. This password will be valid for 24 hours and will be used by all students during the exam session.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Question Panel -->
+            @if (!Model.Exam.IsPublished)
+            {
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-plus"></i>
+                            Add New Question
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        @using (Html.BeginForm("AddQuestion", "Coordinator", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.Hidden("ExamId", Model.Exam.ExamId)
+
+                            <div class="form-group">
+                                @Html.Label("QuestionText", "Question Text", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.TextArea("QuestionText", "", new { @class = "form-control", rows = "3", placeholder = "Enter the question text" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Choice1", "Choice 1", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.TextBox("Choice1", "", new { @class = "form-control", placeholder = "Enter choice 1" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Choice2", "Choice 2", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.TextBox("Choice2", "", new { @class = "form-control", placeholder = "Enter choice 2" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Choice3", "Choice 3", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.TextBox("Choice3", "", new { @class = "form-control", placeholder = "Enter choice 3 (optional)" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Choice4", "Choice 4", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.TextBox("Choice4", "", new { @class = "form-control", placeholder = "Enter choice 4 (optional)" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("CorrectChoiceIndex", "Correct Answer", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.DropDownList("CorrectChoiceIndex", new SelectList(new[] {
+                                        new { Value = 0, Text = "Choice 1" },
+                                        new { Value = 1, Text = "Choice 2" },
+                                        new { Value = 2, Text = "Choice 3" },
+                                        new { Value = 3, Text = "Choice 4" }
+                                    }, "Value", "Text"), "Select correct answer", new { @class = "form-control" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="glyphicon glyphicon-plus"></i>
+                                        Add Question
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Bulk Question Entry Panel -->
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-list-alt"></i>
+                            Bulk Question Entry (Recommended)
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="alert alert-info">
+                            <strong>Format Example:</strong><br/>
+                            Q1. What is an Operating System? A. Software that manages computer hardware B. A programming language C. A type of database D. A web browser Correct: A<br/>
+                            Q2. What does CPU stand for? A. Central Processing Unit B. Computer Program Unit C. Control Processing Unit Correct: A
+                        </div>
+                        
+                        @using (Html.BeginForm("AddBulkQuestions", "Coordinator", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.Hidden("ExamId", Model.Exam.ExamId)
+
+                            <div class="form-group">
+                                @Html.Label("QuestionsText", "Paste All Questions", new { @class = "col-sm-2 control-label" })
+                                <div class="col-sm-10">
+                                    @Html.TextArea("QuestionsText", "", new { @class = "form-control", rows = "15", placeholder = "Paste all questions here using the format shown above..." })
+                                    <p class="help-block">
+                                        <strong>Format Rules:</strong>
+                                        <ul>
+                                            <li>Start each question with Q1., Q2., etc.</li>
+                                            <li>Use A., B., C., D. for choices (supports more than 4 choices)</li>
+                                            <li>End with "Correct: [Letter]"</li>
+                                            <li>Separate questions with line breaks</li>
+                                        </ul>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="glyphicon glyphicon-upload"></i>
+                                        Add All Questions
+                                    </button>
+                                    <small class="text-muted">This will parse and add all questions at once</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Questions List Panel -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-list"></i>
+                        Questions (@Model.TotalQuestions)
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    @if (Model.Questions.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Question</th>
+                                        <th>Choices</th>
+                                        <th>Correct Answer</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var question in Model.Questions)
+                                    {
+                                        <tr>
+                                            <td>@question.QuestionOrder</td>
+                                            <td>
+                                                <div class="question-text">
+                                                    @Html.Raw(question.QuestionText.Length > 100 ? 
+                                                        question.QuestionText.Substring(0, 100) + "..." : 
+                                                        question.QuestionText)
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <ul class="list-unstyled">
+                                                    @foreach (var choice in question.Choices.OrderBy(c => c.ChoiceOrder))
+                                                    {
+                                                        <li>
+                                                            @if (choice.IsCorrect)
+                                                            {
+                                                                <strong class="text-success">@choice.ChoiceText</strong>
+                                                            }
+                                                            else
+                                                            {
+                                                                @choice.ChoiceText
+                                                            }
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var correctChoice = question.Choices.FirstOrDefault(c => c.IsCorrect);
+                                                }
+                                                @if (correctChoice != null)
+                                                {
+                                                    <span class="label label-success">Choice @correctChoice.ChoiceOrder</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            No questions have been added to this exam yet. Use the form above to add questions.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.ActionLink("Back to Exams", "ListExams", "Coordinator", null, new { @class = "btn btn-default" })
+                    @Html.ActionLink("Dashboard", "Index", "Coordinator", null, new { @class = "btn btn-primary" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+}

@@ -1,0 +1,237 @@
+@{
+    ViewBag.Title = "Network Handling Test";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h2>Network Handling Test Page</h2>
+    <p>This page demonstrates the network handling capabilities during exam taking.</p>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Network Status</h3>
+                </div>
+                <div class="panel-body">
+                    <p><strong>Connection Status:</strong> <span id="connectionStatus">Checking...</span></p>
+                    <p><strong>Last Heartbeat:</strong> <span id="lastHeartbeat">Never</span></p>
+                    <p><strong>Pending Changes:</strong> <span id="pendingChanges">0</span></p>
+                    <p><strong>Last Sync:</strong> <span id="lastSync">Never</span></p>
+                    <button class="btn btn-primary" onclick="testHeartbeat()">Test Heartbeat</button>
+                    <button class="btn btn-warning" onclick="simulateOffline()">Simulate Offline</button>
+                    <button class="btn btn-success" onclick="simulateOnline()">Simulate Online</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Test Actions</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label>Test Answer Save:</label>
+                        <div>
+                            <button class="btn btn-default" onclick="testAnswerSave(1, 1)">Save Answer Q1-C1</button>
+                            <button class="btn btn-default" onclick="testAnswerSave(1, 2)">Save Answer Q1-C2</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Test Flag Toggle:</label>
+                        <div>
+                            <button class="btn btn-default" onclick="testFlagToggle(1)">Toggle Flag Q1</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Test Sync:</label>
+                        <div>
+                            <button class="btn btn-info" onclick="testSync()">Force Sync</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Test Log</h3>
+                </div>
+                <div class="panel-body">
+                    <div id="testLog" style="height: 300px; overflow-y: auto; background-color: #f5f5f5; padding: 10px; font-family: monospace; font-size: 12px;">
+                        <div>Network handling test initialized...</div>
+                    </div>
+                    <button class="btn btn-sm btn-default" onclick="clearLog()">Clear Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/network-manager.js"></script>
+    <script>
+        var testQuestionId = 1;
+        var testChoiceId = 1;
+        
+        $(document).ready(function() {
+            log('Page loaded, initializing network manager...');
+            
+            // Initialize NetworkManager if not already done
+            if (typeof NetworkManager !== 'undefined') {
+                log('NetworkManager available, starting tests...');
+                updateStatus();
+                
+                // Update status every 5 seconds
+                setInterval(updateStatus, 5000);
+            } else {
+                log('ERROR: NetworkManager not available!');
+            }
+        });
+        
+        function log(message) {
+            var timestamp = new Date().toLocaleTimeString();
+            var logDiv = $('#testLog');
+            logDiv.append('<div>[' + timestamp + '] ' + message + '</div>');
+            logDiv.scrollTop(logDiv[0].scrollHeight);
+        }
+        
+        function clearLog() {
+            $('#testLog').html('<div>Log cleared...</div>');
+        }
+        
+        function updateStatus() {
+            if (typeof NetworkManager !== 'undefined') {
+                var status = NetworkManager.getConnectionStatus();
+                $('#connectionStatus').text(status.isConnected ? 'Connected' : 'Disconnected');
+                $('#lastHeartbeat').text(status.lastHeartbeat ? status.lastHeartbeat.toLocaleString() : 'Never');
+                $('#pendingChanges').text(status.pendingChanges || 0);
+                $('#lastSync').text(status.lastSync ? status.lastSync.toLocaleString() : 'Never');
+            }
+        }
+        
+        function testHeartbeat() {
+            log('Testing heartbeat...');
+            
+            $.ajax({
+                url: '/Exam/NetworkHeartbeat',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        log('✓ Heartbeat successful: ' + response.message);
+                    } else {
+                        log('✗ Heartbeat failed: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    log('✗ Heartbeat error: ' + error);
+                }
+            });
+        }
+        
+        function simulateOffline() {
+            log('Simulating offline mode...');
+            if (typeof NetworkManager !== 'undefined') {
+                NetworkManager.handleOfflineEvent();
+                log('✓ Offline mode activated');
+            } else {
+                log('✗ NetworkManager not available');
+            }
+        }
+        
+        function simulateOnline() {
+            log('Simulating online mode...');
+            if (typeof NetworkManager !== 'undefined') {
+                NetworkManager.handleOnlineEvent();
+                log('✓ Online mode activated');
+            } else {
+                log('✗ NetworkManager not available');
+            }
+        }
+        
+        function testAnswerSave(questionId, choiceId) {
+            log('Testing answer save: Q' + questionId + ' -> C' + choiceId);
+            
+            if (typeof NetworkManager !== 'undefined') {
+                NetworkManager.saveAnswerWithRetry(questionId, choiceId, function(response) {
+                    if (response.success) {
+                        log('✓ Answer save successful' + (response.offline ? ' (offline)' : ''));
+                    } else {
+                        log('✗ Answer save failed: ' + response.message);
+                    }
+                    updateStatus();
+                });
+            } else {
+                // Fallback to direct AJAX
+                $.ajax({
+                    url: '/Exam/SaveAnswer',
+                    type: 'POST',
+                    data: {
+                        questionId: questionId,
+                        choiceId: choiceId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            log('✓ Answer save successful (direct)');
+                        } else {
+                            log('✗ Answer save failed: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        log('✗ Answer save error: ' + error);
+                    }
+                });
+            }
+        }
+        
+        function testFlagToggle(questionId) {
+            log('Testing flag toggle: Q' + questionId);
+            
+            if (typeof NetworkManager !== 'undefined') {
+                NetworkManager.toggleFlagWithRetry(questionId, function(response) {
+                    if (response.success) {
+                        log('✓ Flag toggle successful: ' + (response.isFlagged ? 'flagged' : 'unflagged') + (response.offline ? ' (offline)' : ''));
+                    } else {
+                        log('✗ Flag toggle failed: ' + response.message);
+                    }
+                    updateStatus();
+                });
+            } else {
+                // Fallback to direct AJAX
+                $.ajax({
+                    url: '/Exam/ToggleFlag',
+                    type: 'POST',
+                    data: {
+                        questionId: questionId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            log('✓ Flag toggle successful (direct): ' + (response.isFlagged ? 'flagged' : 'unflagged'));
+                        } else {
+                            log('✗ Flag toggle failed: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        log('✗ Flag toggle error: ' + error);
+                    }
+                });
+            }
+        }
+        
+        function testSync() {
+            log('Testing offline data sync...');
+            
+            if (typeof NetworkManager !== 'undefined') {
+                NetworkManager.syncOfflineData();
+                log('✓ Sync initiated');
+                updateStatus();
+            } else {
+                log('✗ NetworkManager not available for sync');
+            }
+        }
+    </script>
+}

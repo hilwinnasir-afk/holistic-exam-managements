@@ -1,0 +1,445 @@
+@model HEMS.Controllers.CacheDashboardViewModel
+@{
+    ViewBag.Title = "Cache Management Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="cache-dashboard">
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-tachometer-alt"></i>
+            Cache Management Dashboard
+        </h2>
+        <p class="text-muted">Monitor and manage system cache performance</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            @ViewBag.ErrorMessage
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Cache Health Status -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-@(Model.HealthStatus.IsHealthy ? "success" : "warning")">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-@(Model.HealthStatus.IsHealthy ? "check-circle" : "exclamation-triangle")"></i>
+                        Cache Health Status
+                        <span class="pull-right">
+                            <small>Last Check: @Model.HealthStatus.LastHealthCheck.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <div class="metric-value @(Model.HealthStatus.HitRate >= 70 ? "text-success" : "text-warning")">
+                                    @Model.HealthStatus.HitRate.ToString("F1")%
+                                </div>
+                                <div class="metric-label">Hit Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <div class="metric-value text-info">
+                                    @((Model.HealthStatus.TotalMemoryUsage / 1024 / 1024).ToString("F1")) MB
+                                </div>
+                                <div class="metric-label">Memory Usage</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <div class="metric-value text-primary">
+                                    @Model.HealthStatus.ActiveConnections
+                                </div>
+                                <div class="metric-label">Active Connections</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-box">
+                                <div class="metric-value text-success">
+                                    @Model.HealthStatus.AverageResponseTime.ToString("F1") ms
+                                </div>
+                                <div class="metric-label">Avg Response Time</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.HealthStatus.HealthIssues.Any())
+                    {
+                        <div class="health-issues">
+                            <h4><i class="fas fa-exclamation-triangle text-warning"></i> Health Issues</h4>
+                            <ul class="list-unstyled">
+                                @foreach (var issue in Model.HealthStatus.HealthIssues)
+                                {
+                                    <li><i class="fas fa-arrow-right"></i> @issue</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-chart-line"></i>
+                        Performance Metrics
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="metric-item">
+                                <strong>Total Requests:</strong>
+                                <span class="pull-right">@Model.PerformanceMetrics.TotalRequests.ToString("N0")</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="metric-item">
+                                <strong>Cache Hits:</strong>
+                                <span class="pull-right text-success">@Model.PerformanceMetrics.CacheHits.ToString("N0")</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="metric-item">
+                                <strong>Cache Misses:</strong>
+                                <span class="pull-right text-warning">@Model.PerformanceMetrics.CacheMisses.ToString("N0")</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="metric-item">
+                                <strong>Hit Rate:</strong>
+                                <span class="pull-right @(Model.PerformanceMetrics.HitRate >= 70 ? "text-success" : "text-warning")">
+                                    @Model.PerformanceMetrics.HitRate.ToString("F1")%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="metric-item">
+                                <strong>Avg Hit Time:</strong>
+                                <span class="pull-right">@Model.PerformanceMetrics.AverageHitTime.ToString("F1") ms</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="metric-item">
+                                <strong>Avg Miss Time:</strong>
+                                <span class="pull-right">@Model.PerformanceMetrics.AverageMissTime.ToString("F1") ms</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center" style="margin-top: 15px;">
+                        <a href="@Url.Action("Performance")" class="btn btn-info btn-sm">
+                            <i class="fas fa-chart-bar"></i> View Detailed Metrics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-layer-group"></i>
+                        Cache Categories
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    @if (Model.UsageStatistics.Any())
+                    {
+                        <div class="category-stats">
+                            @foreach (var category in Model.UsageStatistics)
+                            {
+                                <div class="category-item">
+                                    <div class="category-header">
+                                        <strong>@category.Key.ToUpper()</strong>
+                                        <span class="pull-right">
+                                            <span class="badge">@category.Value.EntryCount entries</span>
+                                        </span>
+                                    </div>
+                                    <div class="category-details">
+                                        <small>
+                                            Hit Rate: @category.Value.HitRate.ToString("F1")% |
+                                            Memory: @((category.Value.MemoryUsage / 1024).ToString("F1")) KB |
+                                            Expires: @category.Value.AverageExpiration.ToString(@"hh\:mm\:ss")
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No cache statistics available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cache Management Actions -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-cogs"></i>
+                        Cache Management Actions
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="action-group">
+                                <h4>Maintenance</h4>
+                                @using (Html.BeginForm("OptimizeCache", "Cache", FormMethod.Post, new { @class = "inline-form" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success btn-block" onclick="return confirm('Optimize cache now?')">
+                                        <i class="fas fa-wrench"></i> Optimize Cache
+                                    </button>
+                                }
+                                @using (Html.BeginForm("PreloadCache", "Cache", FormMethod.Post, new { @class = "inline-form", style = "margin-top: 10px;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-info btn-block" onclick="return confirm('Preload cache with frequently accessed data?')">
+                                        <i class="fas fa-download"></i> Preload Cache
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="action-group">
+                                <h4>Clear Cache</h4>
+                                @using (Html.BeginForm("ClearAll", "Cache", FormMethod.Post, new { @class = "inline-form" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-warning btn-block" onclick="return confirm('Clear ALL cache data? This cannot be undone.')">
+                                        <i class="fas fa-trash-alt"></i> Clear All
+                                    </button>
+                                }
+                                <div class="dropdown" style="margin-top: 10px;">
+                                    <button class="btn btn-default btn-block dropdown-toggle" type="button" data-toggle="dropdown">
+                                        <i class="fas fa-layer-group"></i> Clear Category <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" style="width: 100%;">
+                                        @foreach (var category in Model.UsageStatistics.Keys)
+                                        {
+                                            <li>
+                                                @using (Html.BeginForm("ClearCategory", "Cache", FormMethod.Post, new { @class = "inline-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    @Html.Hidden("category", category)
+                                                    <button type="submit" class="btn btn-link btn-block text-left" onclick="return confirm('Clear @category cache?')">
+                                                        @category.ToUpper()
+                                                    </button>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="action-group">
+                                <h4>Exam Cache</h4>
+                                <div class="form-group">
+                                    @using (Html.BeginForm("WarmupExam", "Cache", FormMethod.Post, new { @class = "inline-form" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <div class="input-group">
+                                            <input type="number" name="examId" class="form-control" placeholder="Exam ID" required />
+                                            <span class="input-group-btn">
+                                                <button type="submit" class="btn btn-primary" title="Warm up exam cache">
+                                                    <i class="fas fa-fire"></i>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                                <small class="text-muted">Preload cache for specific exam</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="action-group">
+                                <h4>Configuration</h4>
+                                <a href="@Url.Action("Configuration")" class="btn btn-default btn-block">
+                                    <i class="fas fa-cog"></i> Cache Settings
+                                </a>
+                                <a href="@Url.Action("Performance")" class="btn btn-default btn-block" style="margin-top: 10px;">
+                                    <i class="fas fa-chart-line"></i> Performance Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-refresh controls -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-body text-center">
+                    <div class="auto-refresh-controls">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="autoRefresh" /> Auto-refresh every 30 seconds
+                        </label>
+                        <button type="button" class="btn btn-default btn-sm" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i> Refresh Now
+                        </button>
+                        <span class="text-muted">Last updated: <span id="lastUpdated">@DateTime.Now.ToString("HH:mm:ss")</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cache-dashboard .metric-box {
+        text-align: center;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+
+    .cache-dashboard .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .cache-dashboard .metric-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+    }
+
+    .cache-dashboard .metric-item {
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .cache-dashboard .metric-item:last-child {
+        border-bottom: none;
+    }
+
+    .cache-dashboard .category-item {
+        margin-bottom: 10px;
+        padding: 8px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+    }
+
+    .cache-dashboard .category-header {
+        margin-bottom: 5px;
+    }
+
+    .cache-dashboard .category-details {
+        color: #666;
+    }
+
+    .cache-dashboard .action-group h4 {
+        margin-bottom: 15px;
+        color: #333;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .cache-dashboard .inline-form {
+        display: inline-block;
+        width: 100%;
+    }
+
+    .cache-dashboard .health-issues {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    .cache-dashboard .auto-refresh-controls {
+        padding: 10px 0;
+    }
+
+    .cache-dashboard .auto-refresh-controls label {
+        margin-right: 15px;
+    }
+</style>
+
+<script>
+    var autoRefreshInterval;
+
+    $(document).ready(function () {
+        $('#autoRefresh').change(function () {
+            if (this.checked) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        });
+    });
+
+    function startAutoRefresh() {
+        autoRefreshInterval = setInterval(function () {
+            refreshDashboard();
+        }, 30000); // 30 seconds
+    }
+
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+    }
+
+    function refreshDashboard() {
+        $.get('@Url.Action("GetCacheStatistics", "Cache")', function (data) {
+            if (data.error) {
+                console.error('Error refreshing cache statistics:', data.error);
+                return;
+            }
+
+            // Update hit rate
+            $('.metric-value:contains("%")').first().text(data.Health.HitRate.toFixed(1) + '%');
+            
+            // Update memory usage
+            var memoryMB = (data.Health.TotalMemoryUsage / 1024 / 1024).toFixed(1);
+            $('.metric-value:contains("MB")').text(memoryMB + ' MB');
+            
+            // Update last updated timestamp
+            $('#lastUpdated').text(new Date().toLocaleTimeString());
+            
+        }).fail(function () {
+            console.error('Failed to refresh cache statistics');
+        });
+    }
+</script>

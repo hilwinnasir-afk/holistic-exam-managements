@@ -1,0 +1,126 @@
+@{
+    ViewBag.Title = "Database Connection Error";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <i class="fas fa-database fa-2x mb-2"></i>
+                    <h4 class="mb-0">Database Connection Error</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Error Message -->
+                    <div class="alert alert-danger border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-circle me-3 mt-1 text-danger"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">Unable to connect to the database</h5>
+                                <p class="mb-0">The system cannot access the database at this time. This may be a temporary issue.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What this means -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">What this means:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                Your exam data and progress are stored safely
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                This is likely a temporary connectivity issue
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                Technical support has been automatically notified
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                            <i class="fas fa-redo me-2"></i>Try Again
+                        </button>
+                        
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Critical Exam Warning -->
+                    <div class="alert alert-danger border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">If You're Taking an Exam</h6>
+                                <p class="mb-0"><strong>IMMEDIATELY</strong> notify your exam coordinator. Do not close your browser. Your answers are automatically saved when the connection is restored.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-retry information -->
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-sync-alt me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Automatic Recovery</h6>
+                                <p class="mb-0">The system will automatically attempt to reconnect. This page will refresh in <span id="countdown">30</span> seconds.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Error occurred at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh countdown for database errors
+    let countdown = 30;
+    const countdownElement = document.getElementById('countdown');
+    
+    const timer = setInterval(function() {
+        countdown--;
+        countdownElement.textContent = countdown;
+        
+        if (countdown <= 0) {
+            clearInterval(timer);
+            window.location.reload();
+        }
+    }, 1000);
+</script>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+</style>

@@ -1,0 +1,120 @@
+@{
+    ViewBag.Title = "Internal Server Error";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <i class="fas fa-server fa-2x mb-2"></i>
+                    <h4 class="mb-0">Internal Server Error</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Error Message -->
+                    <div class="alert alert-danger border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-circle me-3 mt-1 text-danger"></i>
+                            <div>
+                                <h5 class="alert-heading mb-2">Something went wrong on our end</h5>
+                                <p class="mb-0">The server encountered an unexpected error and couldn't complete your request.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What happened -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">What happened:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                A technical error occurred while processing your request
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                The error has been automatically logged for investigation
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                Your data and progress have been preserved where possible
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                            <i class="fas fa-redo me-2"></i>Try Again
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Go Back
+                        </button>
+                        
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="alert alert-warning border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-warning"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">If This Continues</h6>
+                                <p class="mb-0">Contact your exam coordinator or technical support immediately if you continue to experience this error, especially during an exam.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Reference -->
+                    @if (ViewBag.ErrorId != null)
+                    {
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-2">Error Reference:</h6>
+                            <div class="bg-light p-3 rounded">
+                                <code>@ViewBag.ErrorId</code>
+                            </div>
+                            <small class="text-muted">Please provide this reference when contacting support.</small>
+                        </div>
+                    }
+
+                    <!-- Timestamp -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Error occurred at @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .border-top {
+        border-top: 1px solid #dee2e6 !important;
+    }
+    
+    code {
+        font-size: 0.9em;
+        color: #e83e8c;
+    }
+</style>

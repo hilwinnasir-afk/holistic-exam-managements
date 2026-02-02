@@ -1,0 +1,202 @@
+@{
+    ViewBag.Title = "Exam Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var exam = ViewBag.Exam as HEMS.Models.Exam;
+    var studentExams = ViewBag.StudentExams as List<HEMS.Models.StudentExam>;
+    var gradeDistribution = ViewBag.GradeDistribution as Dictionary<string, int>;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-stats"></i>
+                        Exam Results: @exam.Title (@exam.AcademicYear)
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <!-- Statistics Summary -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Total Submissions</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2>@ViewBag.TotalSubmissions</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="panel panel-success">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Average Score</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2>@ViewBag.AverageScore%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="panel panel-warning">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Highest Score</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2>@ViewBag.HighestScore%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="panel panel-danger">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Lowest Score</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2>@ViewBag.LowestScore%</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grade Distribution -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Grade Distribution</h4>
+                                </div>
+                                <div class="panel-body">
+                                    @foreach (var grade in gradeDistribution)
+                                    {
+                                        var percentage = ViewBag.TotalSubmissions > 0 ? (double)grade.Value / ViewBag.TotalSubmissions * 100 : 0;
+                                        <div class="row" style="margin-bottom: 10px;">
+                                            <div class="col-md-4">
+                                                <strong>@grade.Key</strong>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="progress">
+                                                    <div class="progress-bar" role="progressbar" style="width: @percentage%">
+                                                        @grade.Value students
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                @percentage.ToString("F1")%
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Exam Information</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <p><strong>Academic Year:</strong> @exam.AcademicYear</p>
+                                    <p><strong>Duration:</strong> @exam.DurationMinutes minutes</p>
+                                    <p><strong>Published:</strong> @(exam.IsPublished ? "Yes" : "No")</p>
+                                    <p><strong>Total Questions:</strong> @ViewBag.TotalQuestions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Results Table -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Individual Student Results</h4>
+                                </div>
+                                <div class="panel-body">
+                                    @if (studentExams != null && studentExams.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Rank</th>
+                                                        <th>Student ID</th>
+                                                        <th>Email</th>
+                                                        <th>Score</th>
+                                                        <th>Percentage</th>
+                                                        <th>Submission Time</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @{int rank = 1;}
+                                                    @foreach (var studentExam in studentExams)
+                                                    {
+                                                        <tr>
+                                                            <td>@rank</td>
+                                                            <td>@studentExam.Student.IdNumber</td>
+                                                            <td>@studentExam.Student.UniversityEmail</td>
+                                                            <td>@studentExam.Score</td>
+                                                            <td>
+                                                                <span class="label @(studentExam.Percentage >= 90 ? "label-success" : 
+                                                                                   studentExam.Percentage >= 80 ? "label-info" : 
+                                                                                   studentExam.Percentage >= 70 ? "label-warning" : 
+                                                                                   studentExam.Percentage >= 60 ? "label-primary" : "label-danger")">
+                                                                    @studentExam.Percentage?.ToString("F1")%
+                                                                </span>
+                                                            </td>
+                                                            <td>@studentExam.SubmitDateTime?.ToString("MMM dd, yyyy HH:mm")</td>
+                                                            <td>
+                                                                @Html.ActionLink("View Details", "StudentExamDetails", new { studentExamId = studentExam.StudentExamId }, new { @class = "btn btn-sm btn-info" })
+                                                            </td>
+                                                        </tr>
+                                                        rank++;
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="glyphicon glyphicon-info-sign"></i>
+                                            No student submissions found for this exam.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            @Html.ActionLink("Back to Exams", "ListExams", null, new { @class = "btn btn-default" })
+                            @Html.ActionLink("Manage Exam", "ManageExam", new { examId = exam.ExamId }, new { @class = "btn btn-primary" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress {
+        margin-bottom: 0;
+    }
+    
+    .panel-body h2 {
+        margin: 0;
+        font-weight: bold;
+    }
+    
+    .table th {
+        background-color: #f5f5f5;
+    }
+    
+    .label {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+</style>

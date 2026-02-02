@@ -1,0 +1,260 @@
+@{
+    ViewBag.Title = "Exam Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var studentExam = ViewBag.StudentExam as HEMS.Models.StudentExam;
+    var studentAnswers = ViewBag.StudentAnswers as List<HEMS.Models.StudentAnswer>;
+    var correctAnswers = (int)ViewBag.CorrectAnswers;
+    var totalQuestions = (int)ViewBag.TotalQuestions;
+    var percentage = (int)ViewBag.Percentage;
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Results Header -->
+            <div class="card">
+                <div class="card-header bg-success text-white text-center">
+                    <h3><i class="fas fa-trophy"></i> Exam Results</h3>
+                </div>
+                <div class="card-body text-center">
+                    <h4>@studentExam.Exam.Title</h4>
+                    <p class="text-muted">Academic Year @studentExam.Exam.AcademicYear</p>
+                    
+                    <!-- Score Display -->
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="percentage">@percentage%</span>
+                        </div>
+                        <h5 class="mt-3">@correctAnswers out of @totalQuestions correct</h5>
+                    </div>
+                    
+                    <!-- Exam Details -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="result-detail">
+                                <i class="fas fa-calendar"></i>
+                                <strong>Started:</strong> @studentExam.StartDateTime.ToString("MMM dd, yyyy HH:mm")
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="result-detail">
+                                <i class="fas fa-clock"></i>
+                                <strong>Submitted:</strong> @studentExam.SubmitDateTime?.ToString("MMM dd, yyyy HH:mm")
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (studentExam.SubmitDateTime.HasValue)
+                    {
+                        var duration = studentExam.SubmitDateTime.Value - studentExam.StartDateTime;
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <div class="result-detail">
+                                    <i class="fas fa-stopwatch"></i>
+                                    <strong>Duration:</strong> @duration.Hours hours @duration.Minutes minutes
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Detailed Results -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Question-by-Question Results</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var question in studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder))
+                    {
+                        var questionNumber = studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder).ToList().IndexOf(question) + 1;
+                        var studentAnswer = studentAnswers?.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
+                        var correctChoice = question.Choices.FirstOrDefault(c => c.IsCorrect);
+                        var selectedChoice = studentAnswer != null ? question.Choices.FirstOrDefault(c => c.ChoiceId == studentAnswer.ChoiceId) : null;
+                        var isCorrect = selectedChoice != null && selectedChoice.IsCorrect;
+                        
+                        <div class="question-result @(isCorrect ? "correct" : "incorrect")">
+                            <div class="question-header">
+                                <span class="question-number">Q@questionNumber</span>
+                                <span class="result-icon">
+                                    @if (selectedChoice == null)
+                                    {
+                                        <i class="fas fa-minus-circle text-warning"></i>
+                                        <span class="text-warning">Not Answered</span>
+                                    }
+                                    else if (isCorrect)
+                                    {
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        <span class="text-success">Correct</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-danger"></i>
+                                        <span class="text-danger">Incorrect</span>
+                                    }
+                                </span>
+                            </div>
+                            
+                            <div class="question-content">
+                                <p class="question-text">@Html.Raw(question.QuestionText)</p>
+                                
+                                <div class="choices">
+                                    @foreach (var choice in question.Choices.OrderBy(c => c.ChoiceOrder))
+                                    {
+                                        var isSelected = selectedChoice?.ChoiceId == choice.ChoiceId;
+                                        var isCorrectChoice = choice.IsCorrect;
+                                        
+                                        <div class="choice @(isSelected ? "selected" : "") @(isCorrectChoice ? "correct-answer" : "")">
+                                            @if (isSelected && isCorrectChoice)
+                                            {
+                                                <i class="fas fa-check text-success"></i>
+                                            }
+                                            else if (isSelected && !isCorrectChoice)
+                                            {
+                                                <i class="fas fa-times text-danger"></i>
+                                            }
+                                            else if (!isSelected && isCorrectChoice)
+                                            {
+                                                <i class="fas fa-arrow-right text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-circle-o text-muted"></i>
+                                            }
+                                            @choice.ChoiceText
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center mt-4 mb-4">
+                <a href="@Url.Action("ExamAccess", "Home")" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Exam Access
+                </a>
+                <button onclick="window.print()" class="btn btn-secondary">
+                    <i class="fas fa-print"></i> Print Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.score-display {
+    margin: 30px 0;
+}
+
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.percentage {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: white;
+}
+
+.result-detail {
+    margin: 10px 0;
+    font-size: 1.1em;
+}
+
+.result-detail i {
+    margin-right: 8px;
+    color: #6c757d;
+}
+
+.question-result {
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.question-result.correct {
+    border-left: 4px solid #28a745;
+}
+
+.question-result.incorrect {
+    border-left: 4px solid #dc3545;
+}
+
+.question-header {
+    background: #f8f9fa;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.question-number {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.result-icon {
+    font-weight: bold;
+}
+
+.question-content {
+    padding: 15px;
+}
+
+.question-text {
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+.choices {
+    margin-left: 20px;
+}
+
+.choice {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.choice i {
+    margin-right: 10px;
+    width: 16px;
+}
+
+.choice.selected {
+    font-weight: bold;
+}
+
+.choice.correct-answer {
+    color: #28a745;
+}
+
+@@media print {
+    .btn {
+        display: none;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: none;
+    }
+    
+    .question-result {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+</style>

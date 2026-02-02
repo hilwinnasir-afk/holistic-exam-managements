@@ -1,0 +1,141 @@
+@{
+    ViewBag.Title = "Error Page Testing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-bug"></i> Error Page Testing
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> This is a testing page for error handling. In production, this controller should be removed.
+                    </div>
+
+                    <h4>HTTP Error Pages</h4>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <a href="@Url.Action("Test404", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-search text-warning"></i>
+                                    <strong>404 Not Found</strong>
+                                    <p class="mb-1">Test the page not found error page</p>
+                                </a>
+                                <a href="@Url.Action("Test403", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-ban text-danger"></i>
+                                    <strong>403 Access Denied</strong>
+                                    <p class="mb-1">Test the access denied error page</p>
+                                </a>
+                                <a href="@Url.Action("Test500", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-server text-danger"></i>
+                                    <strong>500 Internal Server Error</strong>
+                                    <p class="mb-1">Test the internal server error page</p>
+                                </a>
+                                <a href="@Url.Action("Test503", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-tools text-warning"></i>
+                                    <strong>503 Service Unavailable</strong>
+                                    <p class="mb-1">Test the service unavailable error page</p>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <a href="@Url.Action("TestDatabase", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-database text-danger"></i>
+                                    <strong>Database Connection Error</strong>
+                                    <p class="mb-1">Test the database connection error page</p>
+                                </a>
+                                <a href="@Url.Action("TestMaintenance", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-tools text-info"></i>
+                                    <strong>Maintenance Mode</strong>
+                                    <p class="mb-1">Test the maintenance mode page</p>
+                                </a>
+                                <a href="@Url.Action("TestSessionTimeout", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-clock text-warning"></i>
+                                    <strong>Session Timeout</strong>
+                                    <p class="mb-1">Test the session timeout error page</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>Exam-Specific Error Pages</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <a href="@Url.Action("TestExamFailure", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                                    <strong>Exam System Failure</strong>
+                                    <p class="mb-1">Test the exam system failure page</p>
+                                </a>
+                                <a href="@Url.Action("TestTimerFailure", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-stopwatch text-danger"></i>
+                                    <strong>Timer System Failure</strong>
+                                    <p class="mb-1">Test the timer system failure page</p>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <a href="@Url.Action("TestSubmissionFailure", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-upload text-danger"></i>
+                                    <strong>Submission Failure</strong>
+                                    <p class="mb-1">Test the submission failure page</p>
+                                </a>
+                                <a href="@Url.Action("TestGradingFailure", "TestError")" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-calculator text-warning"></i>
+                                    <strong>Grading System Failure</strong>
+                                    <p class="mb-1">Test the grading system failure page</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Error Handling Features</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Professional, user-friendly error messages</li>
+                            <li><i class="fas fa-check text-success"></i> Consistent HEMS branding and styling</li>
+                            <li><i class="fas fa-check text-success"></i> Appropriate action buttons (retry, go back, contact support)</li>
+                            <li><i class="fas fa-check text-success"></i> Error logging and monitoring integration</li>
+                            <li><i class="fas fa-check text-success"></i> Responsive design for all devices</li>
+                            <li><i class="fas fa-check text-success"></i> Proper HTTP status codes</li>
+                            <li><i class="fas fa-check text-success"></i> Custom error handling in Global.asax.cs</li>
+                            <li><i class="fas fa-check text-success"></i> Error page routing configuration</li>
+                            <li><i class="fas fa-check text-success"></i> Security-conscious error messages (no sensitive information exposed)</li>
+                            <li><i class="fas fa-check text-success"></i> Exam-specific error handling for critical scenarios</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .list-group-item {
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item:hover {
+        border-left-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    
+    .list-group-item i {
+        width: 20px;
+        margin-right: 10px;
+    }
+    
+    .list-group-item p {
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+</style>

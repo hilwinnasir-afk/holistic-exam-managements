@@ -1,0 +1,162 @@
+@{
+    ViewBag.Title = "Detailed Exam Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var studentExam = ViewBag.StudentExam as HEMS.Models.StudentExam;
+    var questionResults = ViewBag.QuestionResults as IEnumerable<dynamic>;
+    var gradingResult = ViewBag.GradingResult as HEMS.Services.GradingResult;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-list-alt"></i>
+                        Detailed Results: @studentExam.Exam.Title
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4>@studentExam.Student.IdNumber - @studentExam.Student.UniversityEmail</h4>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <h4>Score: <span class="text-primary">@gradingResult.Percentage.ToString("F1")%</span></h4>
+                        </div>
+                    </div>
+                    <hr />
+
+                    @if (questionResults != null)
+                    {
+                        int questionNumber = 1;
+                        foreach (var result in questionResults)
+                        {
+                            var question = result.Question as HEMS.Models.Question;
+                            var studentAnswer = result.StudentAnswer as HEMS.Models.StudentAnswer;
+                            var choices = result.Choices as List<HEMS.Models.Choice>;
+                            var isCorrect = (bool)result.IsCorrect;
+
+                            <div class="panel @(isCorrect ? "panel-success" : (studentAnswer?.ChoiceId.HasValue == true ? "panel-danger" : "panel-warning"))">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        Question @questionNumber
+                                        @if (isCorrect)
+                                        {
+                                            <span class="label label-success pull-right">Correct</span>
+                                        }
+                                        else if (studentAnswer?.ChoiceId.HasValue == true)
+                                        {
+                                            <span class="label label-danger pull-right">Incorrect</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-warning pull-right">Not Answered</span>
+                                        }
+                                    </h4>
+                                </div>
+                                <div class="panel-body">
+                                    <p><strong>@Html.Raw(question.QuestionText)</strong></p>
+                                    
+                                    @if (choices != null && choices.Any())
+                                    {
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h5>Answer Choices:</h5>
+                                                @foreach (var choice in choices.OrderBy(c => c.ChoiceOrder))
+                                                {
+                                                    var isStudentChoice = studentAnswer?.ChoiceId == choice.ChoiceId;
+                                                    var isCorrectChoice = choice.IsCorrect;
+                                                    
+                                                    <div class="choice-item @(isCorrectChoice ? "correct-choice" : "") @(isStudentChoice ? "student-choice" : "")">
+                                                        <span class="choice-letter">@((char)('A' + choice.ChoiceOrder - 1)).</span>
+                                                        @Html.Raw(choice.ChoiceText)
+                                                        
+                                                        @if (isCorrectChoice)
+                                                        {
+                                                            <span class="label label-success">Correct Answer</span>
+                                                        }
+                                                        @if (isStudentChoice)
+                                                        {
+                                                            <span class="label @(isCorrectChoice ? "label-success" : "label-danger")">Your Answer</span>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    @if (studentAnswer?.IsFlagged == true)
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="glyphicon glyphicon-flag"></i>
+                                            You flagged this question for review.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            
+                            questionNumber++;
+                        }
+                    }
+
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <div class="btn-group" role="group">
+                                @Html.ActionLink("Back to Summary", "Results", new { studentExamId = gradingResult.StudentExamId }, new { @class = "btn btn-primary" })
+                                @Html.ActionLink("Back to Dashboard", "Index", "Home", null, new { @class = "btn btn-default" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .choice-item {
+        padding: 8px 12px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+    }
+    
+    .choice-item.correct-choice {
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+    }
+    
+    .choice-item.student-choice {
+        border-width: 2px;
+        font-weight: bold;
+    }
+    
+    .choice-item.student-choice.correct-choice {
+        background-color: #dff0d8;
+        border-color: #5cb85c;
+    }
+    
+    .choice-item.student-choice:not(.correct-choice) {
+        background-color: #f2dede;
+        border-color: #d9534f;
+    }
+    
+    .choice-letter {
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    .label {
+        margin-left: 10px;
+    }
+    
+    .panel-title .label {
+        margin-left: 0;
+    }
+    
+    .btn-group {
+        margin-top: 30px;
+    }
+</style>

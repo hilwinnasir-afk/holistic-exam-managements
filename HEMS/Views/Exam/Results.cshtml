@@ -1,0 +1,120 @@
+@model HEMS.Services.GradingResult
+@{
+    ViewBag.Title = "Exam Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var studentExam = ViewBag.StudentExam as HEMS.Models.StudentExam;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-education"></i>
+                        Exam Results: @studentExam.Exam.Title
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Student Information</h4>
+                            <p><strong>Student ID:</strong> @studentExam.Student.IdNumber</p>
+                            <p><strong>Email:</strong> @studentExam.Student.UniversityEmail</p>
+                            <p><strong>Exam Date:</strong> @studentExam.StartDateTime.ToString("MMM dd, yyyy")</p>
+                            <p><strong>Submission Time:</strong> @studentExam.SubmitDateTime?.ToString("MMM dd, yyyy HH:mm")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Exam Information</h4>
+                            <p><strong>Academic Year:</strong> @studentExam.Exam.AcademicYear</p>
+                            <p><strong>Duration:</strong> @studentExam.Exam.DurationMinutes minutes</p>
+                            <p><strong>Total Questions:</strong> @Model.TotalQuestions</p>
+                            <p><strong>Graded On:</strong> @Model.GradedDateTime.ToString("MMM dd, yyyy HH:mm")</p>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="text-center">
+                                <h2>Your Score</h2>
+                                <div class="well well-lg">
+                                    <h1 class="text-primary">
+                                        @Model.Percentage.ToString("F1")%
+                                    </h1>
+                                    <p class="lead">
+                                        @Model.CorrectAnswers out of @Model.TotalQuestions questions correct
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="panel panel-success">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Correct Answers</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2 class="text-success">@Model.CorrectAnswers</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="panel panel-danger">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Incorrect Answers</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2 class="text-danger">@Model.IncorrectAnswers</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="panel panel-warning">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Unanswered</h4>
+                                </div>
+                                <div class="panel-body text-center">
+                                    <h2 class="text-warning">@Model.UnansweredQuestions</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <div class="btn-group" role="group">
+                                @Html.ActionLink("View Detailed Results", "DetailedResults", new { studentExamId = Model.StudentExamId }, new { @class = "btn btn-info" })
+                                @Html.ActionLink("Back to Dashboard", "Index", "Home", null, new { @class = "btn btn-default" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .panel-primary .panel-heading {
+        background-color: #337ab7;
+        border-color: #337ab7;
+    }
+    
+    .well-lg h1 {
+        margin: 0;
+        font-size: 4em;
+        font-weight: bold;
+    }
+    
+    .panel-body h2 {
+        margin-top: 0;
+    }
+    
+    .btn-group {
+        margin-top: 20px;
+    }
+</style>

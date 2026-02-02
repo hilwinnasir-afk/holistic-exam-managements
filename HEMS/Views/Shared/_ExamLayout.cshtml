@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - HEMS Exam</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/modernizr/modernizr.min.js"></script>
+    <!-- Responsive CSS is now in site.css -->
+</head>
+
+<body class="exam-focus-mode">
+    
+    <div class="exam-header">
+        <h3>@ViewBag.Title</h3>
+        <!-- Mobile menu toggle button -->
+        <button class="mobile-menu-toggle d-md-none" id="mobileMenuToggle" type="button" aria-label="Toggle question palette">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </div>
+    
+    <div class="exam-content">
+        @RenderBody()
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/Scripts/network-manager.js"></script>
+    
+    <script>
+        var examTimerInterval;
+        var studentExamId = @(ViewBag.StudentExamId ?? 0);
+        var timerFailureCount = 0;
+        var maxTimerFailures = 3;
+        var concentrationMode = false;
+        var zenMode = false;
+        
+        $(document).ready(function() {
+            if (studentExamId > 0) {
+                startExamTimer();
+            }
+            
+            // Initialize distraction-free features
+            initializeDistractionFreeMode();
+        });
+        
+        // Distraction-free mode initialization
+        function initializeDistractionFreeMode() {
+            // Zen mode toggle functionality
+            $('#zenModeToggle').on('click', function() {
+                toggleZenMode();
+            });
+            
+            // Auto-enable concentration mode after 5 minutes
+            setTimeout(function() {
+                if (!concentrationMode) {
+                    enableConcentrationMode();
+                }
+            }, 300000); // 5 minutes
+            
+            // Keyboard shortcut for zen mode (Ctrl+Z)
+            $(document).keydown(function(e) {
+                if (e.ctrlKey && e.which === 90) { // Ctrl+Z
+                    e.preventDefault();
+                    toggleZenMode();
+                }
+            });
+            
+            // Add calming background sounds toggle (optional)
+            addCalmingSoundsToggle();
+            
+            // Initialize focus enhancement
+            initializeFocusEnhancement();
+        }
+        
+        function toggleZenMode() {
+            zenMode = !zenMode;
+            var $body = $('body');
+            var $toggle = $('#zenModeToggle');
+            
+            if (zenMode) {
+                $body.addClass('concentration-mode minimal-mode');
+                $toggle.find('.zen-text').text('Exit Focus');
+                $toggle.find('.zen-icon').text('🌟');
+                enableConcentrationMode();
+                showFocusMessage('Focus mode activated. Breathe deeply and concentrate.');
+            } else {
+                $body.removeClass('concentration-mode minimal-mode');
+                $toggle.find('.zen-text').text('Focus Mode');
+                $toggle.find('.zen-icon').text('🧘');
+                disableConcentrationMode();
+                showFocusMessage('Focus mode deactivated.');
+            }
+        }
+        
+        function enableConcentrationMode() {
+            concentrationMode = true;
+            $('body').addClass('concentration-mode');
+            
+            // Add subtle focus enhancements
+            $('.question-card').addClass('focus-enhancement');
+            
+            // Show breathing indicator
+            $('.breathing-indicator').fadeIn(1000);
+            
+            // Reduce distractions
+            $('.palette-legend').css('opacity', '0.6');
+            
+            // Add focus message
+            if (!zenMode) {
+                showFocusMessage('Concentration mode enabled to help you focus.');
+            }
+        }
+        
+        function disableConcentrationMode() {
+            concentrationMode = false;
+            $('body').removeClass('concentration-mode');
+            
+            // Remove focus enhancements
+            $('.question-card').removeClass('focus-enhancement');
+            
+            // Hide breathing indicator
+            $('.breathing-indicator').fadeOut(1000);
+            
+            // Restore normal opacity
+            $('.palette-legend').css('opacity', '1');
+        }
+        
+        function addCalmingSoundsToggle() {
+            // Add a subtle sound toggle (placeholder for future implementation)
+            var soundToggle = $('<div class="sound-toggle" style="position: fixed; top: 150px; right: 20px; background: var(--focus-surface); border: 1px solid var(--focus-border); border-radius: 25px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; z-index: 1000; opacity: 0.7; transition: all 0.3s ease;">' +
+                '<span class="sound-icon">🔇</span> <span class="sound-text">Sounds</span>' +
+                '</div>');
+            
+            soundToggle.on('click', function() {
+                // Placeholder for calming sounds functionality
+                var $this = $(this);
+                var isEnabled = $this.hasClass('sounds-enabled');
+                
+                if (isEnabled) {
+                    $this.removeClass('sounds-enabled');
+                    $this.find('.sound-icon').text('🔇');
+                    $this.find('.sound-text').text('Sounds');
+                } else {
+                    $this.addClass('sounds-enabled');
+                    $this.find('.sound-icon').text('🎵');
+                    $this.find('.sound-text').text('Quiet');
+                    showFocusMessage('Calming sounds feature coming soon.');
+                }
+            });
+            
+            $('body').append(soundToggle);
+        }
+        
+        function initializeFocusEnhancement() {
+            // Add subtle focus indicators to interactive elements
+            $('.choice-option').on('mouseenter focus', function() {
+                $(this).addClass('focus-enhancement');
+            }).on('mouseleave blur', function() {
+                $(this).removeClass('focus-enhancement');
+            });
+            
+            // Add gentle transitions for better UX
+            $('.palette-item').each(function() {
+                $(this).css('transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)');
+            });
+        }
+        
+        function showFocusMessage(message) {
+            // Remove any existing focus messages
+            $('.focus-message').remove();
+            
+            // Create and show focus message
+            var messageDiv = $('<div class="focus-message" style="position: fixed; top: 120px; left: 50%; transform: translateX(-50%); background: var(--focus-surface); border: 1px solid var(--focus-border); border-radius: 8px; padding: 12px 20px; font-size: 0.9rem; color: var(--focus-text); z-index: 9999; box-shadow: 0 4px 12px var(--focus-shadow-light); max-width: 400px; text-align: center;">' +
+                '<i class="zen-icon" style="margin-right: 8px;">🧘</i>' + message +
+                '</div>');
+            
+            $('body').append(messageDiv);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(function() {
+                messageDiv.fadeOut(500, function() {
+                    messageDiv.remove();
+                });
+            }, 3000);
+        }
+        
+        function startExamTimer() {
+            // Initial timer update
+            updateTimer();
+            
+            // Update timer every second
+            examTimerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function updateTimer() {
+            $.ajax({
+                url: '@Url.Action("GetRemainingTime", "Exam")',
+                type: 'GET',
+                data: { studentExamId: studentExamId },
+                timeout: 10000, // 10 second timeout
+                success: function(response) {
+                    if (response.success) {
+                        var timeDisplay = $('#timeDisplay');
+                        var timerContainer = $('#examTimer');
+                        timeDisplay.text(response.formattedTime);
+                        
+                        // Reset failure count on success
+                        timerFailureCount = 0;
+                        
+                        // Update timer styling based on remaining time with calmer colors
+                        timerContainer.removeClass('warning critical');
+                        if (response.totalSeconds <= 300) { // 5 minutes
+                            timerContainer.addClass('critical');
+                        } else if (response.totalSeconds <= 900) { // 15 minutes
+                            timerContainer.addClass('warning');
+                        }
+                        
+                        // Auto-submit when time runs out
+                        if (response.totalSeconds <= 0) {
+                            clearInterval(examTimerInterval);
+                            showFocusMessage('Time is up! Your exam will be submitted automatically.');
+                            setTimeout(function() {
+                                window.location.href = '@Url.Action("AutoSubmitExam", "Exam")';
+                            }, 2000);
+                        }
+                    } else {
+                        handleTimerError('Server error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    handleTimerError('Network error: ' + (error || status));
+                }
+            });
+        }
+        
+        function handleTimerError(errorMessage) {
+            timerFailureCount++;
+            console.error('Timer error (' + timerFailureCount + '/' + maxTimerFailures + '):', errorMessage);
+            
+            if (timerFailureCount >= maxTimerFailures) {
+                // After multiple failures, show warning but continue
+                $('#timeDisplay').text('Timer Error');
+                $('#examTimer').addClass('critical');
+                
+                // Show persistent warning with calmer styling
+                if (!$('.timer-error-warning').length) {
+                    var warning = $('<div class="timer-error-warning" style="position: fixed; top: 90px; left: 20px; z-index: 9999; max-width: 400px; background: var(--focus-surface); border: 1px solid var(--focus-warning); border-radius: 8px; padding: 12px 16px; color: var(--focus-text); box-shadow: 0 4px 12px var(--focus-shadow-light);">' +
+                        '<i style="color: var(--focus-warning); margin-right: 8px;">⚠️</i> ' +
+                        '<strong>Timer Connection Issue:</strong> Unable to sync with server timer. ' +
+                        'Your progress is still being saved. Please continue with your exam.' +
+                        '<button type="button" style="float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--focus-text-muted);" onclick="$(this).parent().remove();">&times;</button>' +
+                        '</div>');
+                    $('body').append(warning);
+                }
+                
+                // Reduce update frequency to avoid overwhelming the server
+                clearInterval(examTimerInterval);
+                examTimerInterval = setInterval(updateTimer, 10000); // Update every 10 seconds
+            } else {
+                // For first few failures, just show temporary error
+                $('#timeDisplay').text('Updating...');
+            }
+        }
+        
+        // Clear timer interval when leaving page
+        $(window).on('beforeunload', function() {
+            if (examTimerInterval) {
+                clearInterval(examTimerInterval);
+            }
+        });
+        
+        // Network status integration
+        $(document).ready(function() {
+            // Listen for network status changes if NetworkManager is available
+            if (typeof NetworkManager !== 'undefined') {
+                // Check network status periodically and update timer behavior
+                setInterval(function() {
+                    var status = NetworkManager.getConnectionStatus();
+                    if (!status.isConnected && timerFailureCount < maxTimerFailures) {
+                        // If network is down, increase failure count to trigger offline mode faster
+                        timerFailureCount = Math.max(timerFailureCount, 2);
+                    }
+                }, 5000);
+            }
+            
+            // Mobile menu functionality
+            initializeMobileMenu();
+        });
+        
+        // Mobile menu functions
+        function initializeMobileMenu() {
+            var $mobileToggle = $('#mobileMenuToggle');
+            var $palette = $('.question-palette');
+            var $backdrop = $('<div class="mobile-backdrop"></div>');
+            var $closeBtn = $('<button class="palette-close-btn" type="button" aria-label="Close question palette">&times;</button>');
+            
+            // Add backdrop and close button to DOM
+            $('body').append($backdrop);
+            $palette.prepend($closeBtn);
+            
+            // Toggle mobile menu
+            $mobileToggle.on('click', function() {
+                toggleMobileMenu();
+            });
+            
+            // Close menu when clicking backdrop
+            $backdrop.on('click', function() {
+                closeMobileMenu();
+            });
+            
+            // Close menu when clicking close button
+            $closeBtn.on('click', function() {
+                closeMobileMenu();
+            });
+            
+            // Close menu when clicking on a palette item
+            $palette.on('click', '.palette-item', function() {
+                if (window.innerWidth <= 767) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Handle window resize
+            $(window).on('resize', function() {
+                if (window.innerWidth > 767) {
+                    closeMobileMenu();
+                }
+            });
+        }
+        
+        function toggleMobileMenu() {
+            var $toggle = $('#mobileMenuToggle');
+            var $palette = $('.question-palette');
+            var $backdrop = $('.mobile-backdrop');
+            
+            if ($palette.hasClass('mobile-open')) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        }
+        
+        function openMobileMenu() {
+            var $toggle = $('#mobileMenuToggle');
+            var $palette = $('.question-palette');
+            var $backdrop = $('.mobile-backdrop');
+            
+            $toggle.addClass('active');
+            $palette.addClass('mobile-open');
+            $backdrop.addClass('active');
+            $('body').addClass('mobile-menu-open');
+            
+            // Prevent body scrolling when menu is open
+            $('body').css('overflow', 'hidden');
+        }
+        
+        function closeMobileMenu() {
+            var $toggle = $('#mobileMenuToggle');
+            var $palette = $('.question-palette');
+            var $backdrop = $('.mobile-backdrop');
+            
+            $toggle.removeClass('active');
+            $palette.removeClass('mobile-open');
+            $backdrop.removeClass('active');
+            $('body').removeClass('mobile-menu-open');
+            
+            // Restore body scrolling
+            $('body').css('overflow', '');
+        }
+    </script>
+    
+    @RenderSection("scripts", required: false)
+</body>
+</html>

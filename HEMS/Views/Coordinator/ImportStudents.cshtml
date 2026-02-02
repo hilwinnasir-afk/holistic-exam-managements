@@ -1,0 +1,433 @@
+@model HEMS.Models.ViewModels.StudentImportViewModel
+@{
+    ViewBag.Title = "Import Students";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid" style="padding-top: 30px;">
+    <!-- Professional Header with proper spacing -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header mb-5">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h1 class="page-title mb-3">
+                            <i class="fas fa-users-cog text-primary me-3"></i>
+                            Import Students
+                        </h1>
+                        <p class="page-subtitle text-muted mb-0">
+                            Upload a CSV file to import student records with comprehensive validation
+                        </p>
+                    </div>
+                    <div class="page-actions">
+                        <a href="@Url.Action("Index", "Coordinator")" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-file-upload me-2"></i> Upload Student Data</h5>
+                </div>
+                <div class="card-body p-4">
+                    @using (Html.BeginForm("ImportStudents", "Coordinator", FormMethod.Post, new { enctype = "multipart/form-data", @class = "needs-validation", novalidate = "novalidate" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- File Upload Section -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Select CSV File</label>
+                            <div class="file-upload-container position-relative">
+                                <div class="file-upload-area border-2 border-dashed rounded p-4 text-center" id="fileUploadArea">
+                                    <div class="upload-icon mb-3">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary"></i>
+                                    </div>
+                                    <div class="upload-text mb-2">
+                                        <strong>Click to choose CSV file</strong>
+                                    </div>
+                                    <div class="upload-hint text-muted">
+                                        Or drag and drop your file here
+                                    </div>
+                                    <div class="selected-file-info mt-3" id="selectedFileInfo" style="display: none;">
+                                        <i class="fas fa-file-csv text-success me-2"></i>
+                                        <span id="fileName"></span>
+                                        <span class="text-muted ms-2" id="fileSize"></span>
+                                    </div>
+                                </div>
+                                @Html.TextBoxFor(m => m.ImportFile, new { 
+                                    @type = "file", 
+                                    @class = "form-control file-input", 
+                                    accept = ".csv,.txt", 
+                                    required = "required",
+                                    id = "fileInput",
+                                    style = "position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10;"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.ImportFile, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="mb-4">
+                            @Html.LabelFor(m => m.BatchYear, new { @class = "form-label fw-bold" })
+                            @Html.TextBoxFor(m => m.BatchYear, new { 
+                                @class = "form-control", 
+                                @type = "number", 
+                                min = "2000", 
+                                max = "2050", 
+                                required = "required", 
+                                placeholder = "Enter batch year (e.g., 2024)" 
+                            })
+                            @Html.ValidationMessageFor(m => m.BatchYear, "", new { @class = "text-danger" })
+                            <div class="form-text">
+                                <i class="fas fa-info-circle text-info"></i> This will be used as fallback if BatchYear is not specified in CSV file. CSV BatchYear takes precedence.
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            @Html.CheckBoxFor(m => m.SkipHeaderRow, new { @class = "form-check-input" })
+                            @Html.LabelFor(m => m.SkipHeaderRow, new { @class = "form-check-label fw-bold" })
+                            <div class="form-text">
+                                Check this option if your CSV file contains a header row that should be skipped during import.
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                <i class="fas fa-upload me-2"></i> Import Students
+                            </button>
+                            <a href="@Url.Action("Index", "Coordinator")" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-question-circle me-2"></i> File Format Requirements</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="fw-bold mb-3">Required CSV Format:</p>
+                    <div class="alert alert-info border-0">
+                        <code class="text-dark">StudentName,IdNumber,Gender,Section,UniversityEmail</code>
+                    </div>
+                    
+                    <p class="fw-bold mb-3">Example Data:</p>
+                    <div class="bg-light p-3 rounded border">
+                        <code style="font-size: 0.85rem; line-height: 1.6; color: #333;">
+                            StudentName,IdNumber,Gender,section,UniversityEmail<br>
+                            abdulsemad jemal,0043,M,A,abdulsemadjemal@haramaya.edu.et
+                        </code>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <p class="fw-bold mb-3">Important Guidelines:</p>
+                    <ul class="list-unstyled">
+    
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Batch Year will be taken from the form below</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> ID numbers must be unique across the system</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Email addresses must be from approved university domains</li>
+                        <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> Duplicate records will be automatically rejected</li>
+                        <li class="mb-2"><i class="fas fa-info text-info me-2"></i> User accounts will be created automatically</li>
+                        <li class="mb-2"><i class="fas fa-shield-alt text-warning me-2"></i> Maximum file size: 10MB</li>
+                        <li class="mb-2"><i class="fas fa-info text-info me-2"></i> CSV files should use comma separators, not semicolons</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-university me-2"></i> Supported University Domains</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="fw-bold mb-3">Ethiopian Universities:</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><code class="bg-light px-2 py-1 rounded">aau.edu.et</code> - Addis Ababa University</li>
+                        <li class="mb-2"><code class="bg-light px-2 py-1 rounded">ju.edu.et</code> - Jimma University</li>
+                        <li class="mb-2"><code class="bg-light px-2 py-1 rounded">mu.edu.et</code> - Mekelle University</li>
+                        <li class="mb-2"><code class="bg-light px-2 py-1 rounded">haramaya.edu.et</code> - Haramaya University</li>
+                        <li class="mb-2"><code class="bg-light px-2 py-1 rounded">bdu.edu.et</code> - Bahir Dar University</li>
+                        <li class="text-muted">And more...</li>
+                    </ul>
+                    <div class="alert alert-warning border-0 mt-3">
+                        <small>
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> See the system documentation for the complete list of supported university domains.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Individual Student Form Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0"><i class="fas fa-user-plus me-2"></i> Add Individual Student</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">Use this form to add a single student manually if you don't have a CSV file.</p>
+                    
+                    @using (Html.BeginForm("AddIndividualStudent", "Coordinator", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Student Name <span class="text-danger">*</span></label>
+                                <input type="text" name="StudentName" class="form-control" required placeholder="Enter full student name" />
+                                <div class="form-text">Enter the student's full name (e.g., John Smith)</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">ID Number <span class="text-danger">*</span></label>
+                                <input type="text" name="IdNumber" class="form-control" required placeholder="Enter student ID" />
+                                <div class="form-text">Unique student identification number</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">University Email <span class="text-danger">*</span></label>
+                                <input type="email" name="UniversityEmail" class="form-control" required placeholder="student@haramaya.edu.et" />
+                                <div class="form-text">Must be from an approved university domain</div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-bold">Gender</label>
+                                <select name="Gender" class="form-control">
+                                    <option value="">Select Gender</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                </select>
+                                <div class="form-text">Optional field</div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-bold">Section</label>
+                                <input type="text" name="Section" class="form-control" placeholder="A" value="A" />
+                                <div class="form-text">Default: A</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Batch Year <span class="text-danger">*</span></label>
+                                <input type="text" name="BatchYear" class="form-control" required placeholder="e.g., Year IV Sem II" value="Year IV Sem II" />
+                                <div class="form-text">Batch year for this student (e.g., Year IV Sem II)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-warning btn-lg px-4">
+                                <i class="fas fa-user-plus me-2"></i> Add Student
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="fas fa-undo me-2"></i> Clear Form
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // File upload handling - only trigger on file input click, not the entire area
+            $('#fileInput').on('change', function() {
+                var file = this.files[0];
+                if (file) {
+                    var fileSize = file.size / 1024 / 1024; // Convert to MB
+                    var fileName = file.name;
+                    var fileExtension = fileName.split('.').pop().toLowerCase();
+                    
+                    // Check file size (10MB limit)
+                    if (fileSize > 10) {
+                        alert('File size must be less than 10MB');
+                        $(this).val('');
+                        $('#selectedFileInfo').hide();
+                        return;
+                    }
+                    
+                    // Check file extension
+                    if (fileExtension !== 'csv' && fileExtension !== 'txt') {
+                        alert('Only CSV and TXT files are allowed');
+                        $(this).val('');
+                        $('#selectedFileInfo').hide();
+                        return;
+                    }
+                    
+                    // Show selected file info
+                    $('#fileName').text(fileName);
+                    $('#fileSize').text('(' + fileSize.toFixed(2) + ' MB)');
+                    $('#selectedFileInfo').show();
+                    
+                    // Change upload area appearance
+                    $('#fileUploadArea').addClass('file-selected').removeClass('border-dashed');
+                } else {
+                    $('#selectedFileInfo').hide();
+                    $('#fileUploadArea').removeClass('file-selected').addClass('border-dashed');
+                }
+            });
+
+            // Make only the upload area clickable, not the entire page
+            $('#fileUploadArea').on('click', function(e) {
+                // Only trigger if clicking on the upload area itself, not child elements
+                if (e.target === this || $(e.target).closest('.upload-icon, .upload-text, .upload-hint').length > 0) {
+                    $('#fileInput').click();
+                }
+            });
+
+            // Prevent file input from triggering when clicking elsewhere
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#fileUploadArea').length && !$(e.target).is('#fileInput')) {
+                    // Clicked outside upload area - do nothing
+                }
+            });
+
+            // Drag and drop functionality
+            $('#fileUploadArea').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('drag-over');
+            });
+
+            $('#fileUploadArea').on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+            });
+
+            $('#fileUploadArea').on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+                
+                var files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    $('#fileInput')[0].files = files;
+                    $('#fileInput').trigger('change');
+                }
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                var isValid = true;
+                
+                // Check if file is selected
+                if (!$('#fileInput')[0].files.length) {
+                    alert('Please select a file to upload');
+                    isValid = false;
+                }
+                
+                // Check batch year
+                var batchYear = parseInt($('#BatchYear').val());
+                if (!batchYear || batchYear < 2000 || batchYear > 2050) {
+                    alert('Please enter a valid batch year between 2000 and 2050');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .file-upload-area {
+        background-color: #f8f9fa;
+        border-color: #dee2e6 !important;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .file-upload-area:hover {
+        background-color: #e9ecef;
+        border-color: #007bff !important;
+    }
+    
+    .file-upload-area.drag-over {
+        background-color: #e3f2fd;
+        border-color: #2196f3 !important;
+    }
+    
+    .file-upload-area.file-selected {
+        background-color: #d4edda;
+        border-color: #28a745 !important;
+    }
+    
+    .file-input {
+        pointer-events: none; /* Prevent direct clicking on the hidden input */
+    }
+    
+    .upload-icon {
+        pointer-events: none;
+    }
+    
+    .upload-text {
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+    
+    .upload-hint {
+        font-size: 0.9rem;
+        pointer-events: none;
+    }
+    
+    .selected-file-info {
+        background-color: rgba(40, 167, 69, 0.1);
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #28a745;
+    }
+    
+    .card {
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    code {
+        font-size: 0.875em;
+        word-wrap: break-word;
+    }
+    
+    .form-label {
+        margin-bottom: 8px;
+    }
+    
+    .btn-lg {
+        padding: 12px 24px;
+        font-size: 1.1rem;
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .page-subtitle {
+        font-size: 1.1rem;
+    }
+</style>
