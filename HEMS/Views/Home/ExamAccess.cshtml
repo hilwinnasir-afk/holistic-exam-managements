@@ -124,7 +124,6 @@
 
                     @if (ViewBag.PublishedExams != null && ((List<HEMS.Models.Exam>)ViewBag.PublishedExams).Any())
                     {
-                        <hr class="my-4">
                         <h6>Published Exams:</h6>
                         <div class="list-group">
                             @foreach (var exam in (List<HEMS.Models.Exam>)ViewBag.PublishedExams)
@@ -137,16 +136,18 @@
                                     <p class="mb-1">Academic Year @exam.AcademicYear - Holistic Assessment</p>
                                     <small class="text-success">Status: Available</small>
                                     <div class="mt-2">
-                                        <button class="btn btn-primary btn-sm" onclick="startExam(@exam.ExamId)">
-                                            <i class="fas fa-play"></i> Start Exam
+                                        <button class="btn btn-success btn-sm" onclick="startExam(@exam.ExamId)">
+                                            <i class="fas fa-play"></i> Start Real Exam
                                         </button>
                                         <small class="text-muted ml-2">
-                                            <span>Available: @exam.ExamStartDateTime.ToString("MMM dd, yyyy HH:mm") - @exam.ExamEndDateTime.ToString("MMM dd, yyyy HH:mm")</span>
+                                            <span>Questions: @(exam.Questions?.Count ?? 0) | Created: @exam.CreatedDate.ToString("MMM dd, yyyy")</span>
                                         </small>
                                     </div>
                                 </div>
                             }
                         </div>
+                        
+                        <hr class="my-4">
                     }
 
                     @if (ViewBag.ErrorMessage != null)

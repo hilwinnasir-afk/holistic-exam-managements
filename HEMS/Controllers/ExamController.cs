@@ -23,22 +23,119 @@ namespace HEMS.Controllers
         }
 
         /// <summary>
-        /// Start an exam - DEMO MODE: Redirect directly to mock exam
+        /// Start an exam - Create student exam session and redirect to real exam
         /// </summary>
         [HttpPost]
         public ActionResult Start(int examId = 1)
         {
             try
             {
-                // DEMO MODE: Go directly to mock exam without database operations
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] Starting mock exam demo mode for examId: {examId}");
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Starting real exam for examId: {examId}");
                 
-                // Redirect to mock exam interface
-                return RedirectToAction("MockExam");
+                // Get the exam
+                var exam = _context.Exams
+                    .Include(e => e.Questions)
+                    .ThenInclude(q => q.Choices)
+                    .FirstOrDefault(e => e.ExamId == examId);
+
+                if (exam == null)
+                {
+                    TempData["ErrorMessage"] = "Exam not found.";
+                    return RedirectToAction("ExamAccess", "Home");
+                }
+
+                if (!exam.IsPublished)
+                {
+                    TempData["ErrorMessage"] = "This exam is not yet available.";
+                    return RedirectToAction("ExamAccess", "Home");
+                }
+
+                // For demo purposes, create a dummy student (in real implementation, get from session)
+                var student = _context.Students.FirstOrDefault();
+                if (student == null)
+                {
+                    // Create a demo student if none exists
+                    var demoUser = new User
+                    {
+                        Username = "demo@university.edu.et",
+                        PasswordHash = "demo_hash",
+                        RoleId = 2, // Student role
+                        LoginPhaseCompleted = true,
+                        MustChangePassword = false,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    _context.Users.Add(demoUser);
+                    _context.SaveChanges();
+
+                    student = new Student
+                    {
+                        UserId = demoUser.UserId,
+                        IdNumber = "ST001",
+                        UniversityEmail = "demo@university.edu.et",
+                        FirstName = "Demo",
+                        LastName = "Student",
+                        Email = "demo@university.edu.et",
+                        BatchYear = "2025",
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    _context.Students.Add(student);
+                    _context.SaveChanges();
+                }
+
+                // Check if student already has an exam session for this exam
+                var existingSession = _context.StudentExams
+                    .FirstOrDefault(se => se.StudentId == student.StudentId && se.ExamId == examId);
+
+                if (existingSession != null)
+                {
+                    if (existingSession.IsSubmitted)
+                    {
+                        TempData["InfoMessage"] = "You have already submitted this exam.";
+                        return RedirectToAction("Result", new { studentExamId = existingSession.StudentExamId });
+                    }
+                    else
+                    {
+                        // Continue existing session
+                        return RedirectToAction("Take", new { studentExamId = existingSession.StudentExamId });
+                    }
+                }
+
+                // Create new exam session
+                var studentExam = new StudentExam
+                {
+                    StudentId = student.StudentId,
+                    ExamId = examId,
+                    StartDateTime = DateTime.UtcNow,
+                    IsSubmitted = false
+                };
+
+                _context.StudentExams.Add(studentExam);
+                _context.SaveChanges();
+
+                // Create empty answer records for all questions
+                foreach (var question in exam.Questions)
+                {
+                    var studentAnswer = new StudentAnswer
+                    {
+                        StudentExamId = studentExam.StudentExamId,
+                        QuestionId = question.QuestionId,
+                        ChoiceId = null,
+                        IsFlagged = false,
+                        LastModified = DateTime.UtcNow
+                    };
+                    _context.StudentAnswers.Add(studentAnswer);
+                }
+                _context.SaveChanges();
+
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Created student exam session: {studentExam.StudentExamId}");
+                
+                // Redirect to real exam taking interface
+                return RedirectToAction("Take", new { studentExamId = studentExam.StudentExamId });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ERROR] Error starting exam: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
                 TempData["ErrorMessage"] = $"An error occurred while starting the exam. Please try again.";
                 return RedirectToAction("ExamAccess", "Home");
             }
@@ -169,28 +266,36 @@ namespace HEMS.Controllers
         }
 
         /// <summary>
-        /// Take exam - DEMO MODE: Skip validations and show exam
+        /// Take exam - Display real exam with all coordinator-created content
         /// </summary>
         public ActionResult Take(int studentExamId)
         {
             try
             {
-                // Get student exam session
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Loading exam for studentExamId: {studentExamId}");
+
+                // Get student exam session with all related data
                 var studentExam = _context.StudentExams
                     .Include(se => se.Exam)
-                    .ThenInclude(e => e.Questions)
-                    .ThenInclude(q => q.Choices)
+                    .ThenInclude(e => e.Questions.OrderBy(q => q.QuestionOrder))
+                    .ThenInclude(q => q.Choices.OrderBy(c => c.ChoiceOrder))
+                    .Include(se => se.Student)
+                    .ThenInclude(s => s.User)
                     .FirstOrDefault(se => se.StudentExamId == studentExamId);
 
                 if (studentExam == null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[ERROR] Student exam session not found: {studentExamId}");
                     TempData["ErrorMessage"] = "Exam session not found.";
                     return RedirectToAction("ExamAccess", "Home");
                 }
 
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Found exam: {studentExam.Exam.Title} with {studentExam.Exam.Questions.Count} questions");
+
                 // Check if exam is already submitted
                 if (studentExam.IsSubmitted)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Exam already submitted, redirecting to results");
                     TempData["InfoMessage"] = "This exam has already been submitted.";
                     return RedirectToAction("Result", new { studentExamId = studentExamId });
                 }
@@ -199,6 +304,7 @@ namespace HEMS.Controllers
                 var examEndTime = studentExam.StartDateTime.AddMinutes(studentExam.Exam.DurationMinutes);
                 if (DateTime.UtcNow > examEndTime)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Exam time expired, auto-submitting");
                     // Auto-submit expired exam
                     studentExam.IsSubmitted = true;
                     studentExam.SubmitDateTime = DateTime.UtcNow;
@@ -213,19 +319,31 @@ namespace HEMS.Controllers
                     .Where(sa => sa.StudentExamId == studentExamId)
                     .ToList();
 
-                // Calculate remaining time
-                var remainingMinutes = (int)(examEndTime - DateTime.UtcNow).TotalMinutes;
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Found {studentAnswers.Count} student answers");
 
-                // Prepare view model
+                // Calculate remaining time
+                var remainingMinutes = (int)Math.Max(0, (examEndTime - DateTime.UtcNow).TotalMinutes);
+                
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Remaining time: {remainingMinutes} minutes");
+
+                // Prepare view data
                 ViewBag.StudentExam = studentExam;
                 ViewBag.StudentAnswers = studentAnswers;
-                ViewBag.RemainingTimeMinutes = Math.Max(0, remainingMinutes);
+                ViewBag.RemainingTimeMinutes = remainingMinutes;
+
+                // Log exam details for debugging
+                foreach (var question in studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Question {question.QuestionOrder}: {question.QuestionText.Substring(0, Math.Min(50, question.QuestionText.Length))}...");
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] - Has {question.Choices.Count} choices");
+                }
 
                 return View();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ERROR] Error loading exam: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
                 TempData["ErrorMessage"] = "An error occurred while loading the exam. Please try again.";
                 return RedirectToAction("ExamAccess", "Home");
             }
@@ -333,9 +451,13 @@ namespace HEMS.Controllers
         {
             try
             {
-                // Get student exam session
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Submitting exam for studentExamId: {studentExamId}");
+
+                // Get student exam session with all related data
                 var studentExam = _context.StudentExams
                     .Include(se => se.Exam)
+                    .ThenInclude(e => e.Questions)
+                    .ThenInclude(q => q.Choices)
                     .FirstOrDefault(se => se.StudentExamId == studentExamId);
 
                 if (studentExam == null)
@@ -350,10 +472,45 @@ namespace HEMS.Controllers
                     return RedirectToAction("Result", new { studentExamId = studentExamId });
                 }
 
-                // Submit exam
+                // Get student answers
+                var studentAnswers = _context.StudentAnswers
+                    .Where(sa => sa.StudentExamId == studentExamId)
+                    .ToList();
+
+                // Calculate score
+                int correctAnswers = 0;
+                int totalQuestions = studentExam.Exam.Questions.Count;
+
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Grading exam with {totalQuestions} questions");
+
+                foreach (var question in studentExam.Exam.Questions)
+                {
+                    var studentAnswer = studentAnswers.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
+                    var correctChoice = question.Choices.FirstOrDefault(c => c.IsCorrect);
+                    
+                    if (studentAnswer != null && correctChoice != null && studentAnswer.ChoiceId == correctChoice.ChoiceId)
+                    {
+                        correctAnswers++;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] Question {question.QuestionOrder}: CORRECT");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] Question {question.QuestionOrder}: INCORRECT or UNANSWERED");
+                    }
+                }
+
+                // Calculate percentage
+                decimal percentage = totalQuestions > 0 ? (decimal)(correctAnswers * 100) / totalQuestions : 0;
+
+                // Submit exam and save score
                 studentExam.IsSubmitted = true;
                 studentExam.SubmitDateTime = DateTime.UtcNow;
+                studentExam.Score = correctAnswers;
+                studentExam.Percentage = percentage;
+
                 _context.SaveChanges();
+
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Exam submitted successfully. Score: {correctAnswers}/{totalQuestions} ({percentage:F1}%)");
 
                 TempData["SuccessMessage"] = "Exam submitted successfully!";
                 return RedirectToAction("Result", new { studentExamId = studentExamId });
@@ -361,23 +518,28 @@ namespace HEMS.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ERROR] Error submitting exam: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
                 TempData["ErrorMessage"] = "An error occurred while submitting the exam. Please try again.";
                 return RedirectToAction("Take", new { studentExamId = studentExamId });
             }
         }
 
         /// <summary>
-        /// Show result - display score and percentage
+        /// Show result - display score and percentage with detailed breakdown
         /// </summary>
         public ActionResult Result(int studentExamId)
         {
             try
             {
-                // Get student exam session
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Loading results for studentExamId: {studentExamId}");
+
+                // Get student exam session with all related data
                 var studentExam = _context.StudentExams
                     .Include(se => se.Exam)
-                    .ThenInclude(e => e.Questions)
-                    .ThenInclude(q => q.Choices)
+                    .ThenInclude(e => e.Questions.OrderBy(q => q.QuestionOrder))
+                    .ThenInclude(q => q.Choices.OrderBy(c => c.ChoiceOrder))
+                    .Include(se => se.Student)
+                    .ThenInclude(s => s.User)
                     .FirstOrDefault(se => se.StudentExamId == studentExamId);
 
                 if (studentExam == null)
@@ -393,40 +555,55 @@ namespace HEMS.Controllers
                     return RedirectToAction("Take", new { studentExamId = studentExamId });
                 }
 
-                // Calculate score
+                // Get student answers
                 var studentAnswers = _context.StudentAnswers
                     .Where(sa => sa.StudentExamId == studentExamId)
                     .ToList();
 
-                int correctAnswers = 0;
-                int totalQuestions = studentExam.Exam.Questions.Count;
-
-                foreach (var question in studentExam.Exam.Questions)
+                // If scores weren't calculated during submission, calculate them now
+                if (studentExam.Score == null || studentExam.Percentage == null)
                 {
-                    var studentAnswer = studentAnswers.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
-                    if (studentAnswer != null)
+                    System.Diagnostics.Debug.WriteLine("[DEBUG] Calculating scores for result display");
+
+                    int correctAnswers = 0;
+                    int totalQuestions = studentExam.Exam.Questions.Count;
+
+                    foreach (var question in studentExam.Exam.Questions)
                     {
-                        var correctChoice = question.Choices.FirstOrDefault(c => c.IsCorrect);
-                        if (correctChoice != null && studentAnswer.ChoiceId == correctChoice.ChoiceId)
+                        var studentAnswer = studentAnswers.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
+                        if (studentAnswer != null)
                         {
-                            correctAnswers++;
+                            var correctChoice = question.Choices.FirstOrDefault(c => c.IsCorrect);
+                            if (correctChoice != null && studentAnswer.ChoiceId == correctChoice.ChoiceId)
+                            {
+                                correctAnswers++;
+                            }
                         }
                     }
+
+                    var percentage = totalQuestions > 0 ? (correctAnswers * 100) / totalQuestions : 0;
+
+                    // Update the database with calculated scores
+                    studentExam.Score = correctAnswers;
+                    studentExam.Percentage = percentage;
+                    _context.SaveChanges();
                 }
 
-                var percentage = totalQuestions > 0 ? (correctAnswers * 100) / totalQuestions : 0;
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Results - Score: {studentExam.Score}, Percentage: {studentExam.Percentage}%");
 
+                // Prepare view data
                 ViewBag.StudentExam = studentExam;
                 ViewBag.StudentAnswers = studentAnswers;
-                ViewBag.CorrectAnswers = correctAnswers;
-                ViewBag.TotalQuestions = totalQuestions;
-                ViewBag.Percentage = percentage;
+                ViewBag.CorrectAnswers = (int)(studentExam.Score ?? 0);
+                ViewBag.TotalQuestions = studentExam.Exam.Questions.Count;
+                ViewBag.Percentage = (int)(studentExam.Percentage ?? 0);
 
                 return View();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ERROR] Error loading results: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
                 TempData["ErrorMessage"] = "An error occurred while loading results. Please try again.";
                 return RedirectToAction("ExamAccess", "Home");
             }

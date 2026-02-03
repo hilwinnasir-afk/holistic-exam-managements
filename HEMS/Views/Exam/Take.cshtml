@@ -1,656 +1,665 @@
 @{
     ViewBag.Title = "Take Exam";
-    Layout = "~/Views/Shared/_ExamLayout.cshtml";
+    Layout = null;
     var studentExam = ViewBag.StudentExam as HEMS.Models.StudentExam;
     var studentAnswers = ViewBag.StudentAnswers as List<HEMS.Models.StudentAnswer>;
     var remainingMinutes = (int)ViewBag.RemainingTimeMinutes;
 }
 
-@Html.AntiForgeryToken()
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@studentExam.Exam.Title</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    @Html.AntiForgeryToken()
 
-<div class="exam-container">
-    <!-- Header -->
+    <!-- Exam Header with Title and Timer -->
     <div class="exam-header">
-        <div class="row">
-            <div class="col-md-8">
-                <h3>@studentExam.Exam.Title</h3>
-                <p class="text-muted">Academic Year @studentExam.Exam.AcademicYear - Holistic Assessment</p>
-            </div>
-            <div class="col-md-4 text-right">
-                <div class="timer-display">
-                    <i class="fas fa-clock"></i>
-                    <span id="timer">@remainingMinutes:00</span>
-                </div>
-            </div>
+        <div class="exam-title">@studentExam.Exam.Title</div>
+        <div class="exam-timer">
+            <span id="timer">@remainingMinutes:00</span>
         </div>
     </div>
 
-    <div class="row exam-content">
-        <!-- Left Sidebar - Question Palette -->
-        <div class="col-md-3">
-            <div class="question-palette">
-                <h5>Question Palette</h5>
-                <div class="palette-grid">
-                    @for (int i = 0; i < studentExam.Exam.Questions.Count; i++)
-                    {
-                        var question = studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder).ElementAt(i);
-                        var answer = studentAnswers?.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
-                        var isAnswered = answer?.ChoiceId != null;
-                        var isFlagged = answer?.IsFlagged == true;
-                        var questionNumber = i + 1;
-                        
-                        <div class="palette-rectangle @(questionNumber == 1 ? "current" : "") @(isAnswered ? "answered" : "unanswered") @(isFlagged ? "flagged" : "")" 
-                             data-question-id="@question.QuestionId" 
-                             data-question-number="@questionNumber"
-                             onclick="navigateToQuestion(@questionNumber)">
-                            <div class="question-number">@questionNumber</div>
-                            @if (isFlagged)
-                            {
-                                <div class="flag-triangle"></div>
-                            }
-                        </div>
-                    }
-                </div>
-                
-                <div class="palette-legend mt-3">
-                    <div class="legend-item">
-                        <div class="palette-rectangle unanswered small">
-                            <div class="question-number">1</div>
-                        </div>
-                        <span>Unanswered</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="palette-rectangle answered small">
-                            <div class="question-number">2</div>
-                        </div>
-                        <span>Answered</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="palette-rectangle current small">
-                            <div class="question-number">3</div>
-                        </div>
-                        <span>Current</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="palette-rectangle flagged small">
-                            <div class="question-number">4</div>
-                            <div class="flag-triangle"></div>
-                        </div>
-                        <span>Flagged</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Center Area - Single Question Display -->
-        <div class="col-md-9">
-            <div class="single-question-area">
-                @foreach (var question in studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder))
+    <!-- Main Exam Container -->
+    <div class="exam-container">
+        <!-- LEFT COLUMN: Question Palette ONLY -->
+        <div class="question-palette-column">
+            <div class="palette-grid">
+                @for (int i = 0; i < studentExam.Exam.Questions.Count; i++)
                 {
-                    var questionNumber = studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder).ToList().IndexOf(question) + 1;
+                    var question = studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder).ElementAt(i);
                     var answer = studentAnswers?.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
-                    var selectedChoiceId = answer?.ChoiceId;
+                    var isAnswered = answer?.ChoiceId != null;
                     var isFlagged = answer?.IsFlagged == true;
+                    var questionNumber = i + 1;
                     
-                    <div class="single-question-container" id="question-@questionNumber" style="@(questionNumber == 1 ? "" : "display: none;")">
-                        <!-- Question Header -->
-                        <div class="question-header-centered">
-                            <div class="question-info">
-                                <h4>Question @questionNumber of @studentExam.Exam.Questions.Count</h4>
-                                <button type="button" class="btn btn-outline-warning btn-sm flag-btn" 
-                                        data-question-id="@question.QuestionId" 
-                                        data-flagged="@isFlagged.ToString().ToLower()"
-                                        onclick="toggleFlag(@question.QuestionId, this)">
-                                    <i class="fas fa-flag"></i>
-                                    <span>@(isFlagged ? "Unflag" : "Flag")</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Centered Question Content -->
-                        <div class="centered-question-content">
-                            <div class="question-text-centered">
-                                @Html.Raw(question.QuestionText)
-                            </div>
-                            
-                            <div class="choices-container-centered">
-                                @foreach (var choice in question.Choices.OrderBy(c => c.ChoiceOrder))
-                                {
-                                    <div class="choice-item-centered">
-                                        <label class="choice-label-centered" for="choice-@choice.ChoiceId">
-                                            <input type="radio" 
-                                                   id="choice-@choice.ChoiceId" 
-                                                   name="question-@question.QuestionId" 
-                                                   value="@choice.ChoiceId"
-                                                   @(selectedChoiceId == choice.ChoiceId ? "checked" : "")
-                                                   onchange="saveAnswer(@question.QuestionId, @choice.ChoiceId)">
-                                            <span class="choice-text">@choice.ChoiceText</span>
-                                        </label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
+                    <button class="palette-btn @(questionNumber == 1 ? "current" : "") @(isAnswered ? "answered" : "unanswered") @(isFlagged ? "flagged" : "")" 
+                            data-question-id="@question.QuestionId" 
+                            data-question-number="@questionNumber"
+                            onclick="navigateToQuestion(@questionNumber)">
+                        <span class="question-number">@questionNumber</span>
+                    </button>
                 }
             </div>
+        </div>
 
-            <!-- Bottom Navigation -->
-            <div class="exam-navigation">
-                <div class="nav-buttons">
-                    <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousQuestion()">
-                        <i class="fas fa-arrow-left"></i> Previous
-                    </button>
-                    <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">
-                        Next <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button type="button" class="btn btn-success btn-lg" onclick="submitExam()">
-                        <i class="fas fa-check"></i> Submit Exam
-                    </button>
+        <!-- CENTER COLUMN: Question Content ONLY -->
+        <div class="question-content-column">
+            @foreach (var question in studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder))
+            {
+                var questionNumber = studentExam.Exam.Questions.OrderBy(q => q.QuestionOrder).ToList().IndexOf(question) + 1;
+                var answer = studentAnswers?.FirstOrDefault(sa => sa.QuestionId == question.QuestionId);
+                var selectedChoiceId = answer?.ChoiceId;
+                var isFlagged = answer?.IsFlagged == true;
+                
+                <div class="question-container" id="question-@questionNumber" style="@(questionNumber == 1 ? "" : "display: none;")">
+                    <!-- Question Text -->
+                    <div class="question-text">
+                        @Html.Raw(question.QuestionText)
+                    </div>
+                    
+                    <!-- Answer Choices -->
+                    <div class="choices-container">
+                        @foreach (var choice in question.Choices.OrderBy(c => c.ChoiceOrder))
+                        {
+                            <div class="choice-item">
+                                <label class="choice-label">
+                                    <input type="radio" 
+                                           name="question-@question.QuestionId" 
+                                           value="@choice.ChoiceId"
+                                           @(selectedChoiceId == choice.ChoiceId ? "checked" : "")
+                                           onchange="saveAnswer(@question.QuestionId, @choice.ChoiceId)">
+                                    <span class="choice-text">@choice.ChoiceText</span>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Navigation Buttons (tight spacing) -->
+                    <div class="navigation-buttons">
+                        <button type="button" class="nav-btn" id="prevBtn" onclick="previousQuestion()">Previous</button>
+                        <button type="button" class="nav-btn" id="nextBtn" onclick="nextQuestion()">Next</button>
+                        <button type="button" class="nav-btn submit-btn" onclick="showSubmitConfirmation()">Submit Exam</button>
+                    </div>
+                    
+                    <!-- Flag Button (bottom-left, below navigation) -->
+                    <div class="flag-button-container">
+                        <button type="button" class="flag-btn" 
+                                data-question-id="@question.QuestionId" 
+                                data-flagged="@isFlagged.ToString().ToLower()"
+                                onclick="toggleFlag(@question.QuestionId, this)">
+                            @(isFlagged ? "Remove Flag" : "Flag")
+                        </button>
+                    </div>
                 </div>
+            }
+        </div>
+    </div>
+
+    <!-- Submit Confirmation Panel (appears at bottom) -->
+    <div id="submitConfirmation" class="submit-confirmation" style="display: none;">
+        <div class="confirmation-content">
+            <p><strong>Are you sure you want to submit your exam?</strong></p>
+            <div class="submission-stats">
+                <p>Answered: <span id="answeredCount">0</span> questions</p>
+                <p>Unanswered: <span id="unansweredCount">0</span> questions</p>
+                <p>Flagged: <span id="flaggedCount">0</span> questions</p>
+            </div>
+            <p class="warning-text"><strong>Warning:</strong> Once submitted, you cannot change your answers.</p>
+            <div class="confirmation-buttons">
+                <button type="button" class="cancel-btn" onclick="hideSubmitConfirmation()">Cancel</button>
+                <button type="button" class="confirm-submit-btn" onclick="confirmSubmit()">Submit Exam</button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Submit Confirmation Modal -->
-<div class="modal fade" id="submitModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Submit Exam</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to submit your exam?</p>
-                <div class="submission-summary">
-                    <p><strong>Answered:</strong> <span id="answeredCount">0</span> questions</p>
-                    <p><strong>Unanswered:</strong> <span id="unansweredCount">0</span> questions</p>
-                    <p><strong>Flagged:</strong> <span id="flaggedCount">0</span> questions</p>
-                </div>
-                <div class="alert alert-warning">
-                    <strong>Warning:</strong> Once submitted, you cannot change your answers.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="confirmSubmit()">Submit Exam</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <script>
+        // Global variables
+        let currentQuestion = 1;
+        let totalQuestions = @studentExam.Exam.Questions.Count;
+        let studentExamId = @studentExam.StudentExamId;
+        let remainingSeconds = @remainingMinutes * 60;
 
-<script>
-// Global variables
-let currentQuestion = 1;
-let totalQuestions = @studentExam.Exam.Questions.Count;
-let studentExamId = @studentExam.StudentExamId;
-let remainingSeconds = @remainingMinutes * 60;
-
-// Timer functionality
-function updateTimer() {
-    if (remainingSeconds <= 0) {
-        // Auto-submit when time expires
-        autoSubmitExam();
-        return;
-    }
-    
-    let minutes = Math.floor(remainingSeconds / 60);
-    let seconds = remainingSeconds % 60;
-    document.getElementById('timer').textContent = 
-        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-    
-    remainingSeconds--;
-}
-
-// Start timer
-setInterval(updateTimer, 1000);
-
-// Navigation functions
-function navigateToQuestion(questionNumber) {
-    if (questionNumber < 1 || questionNumber > totalQuestions) return;
-    
-    // Hide current question
-    document.getElementById('question-' + currentQuestion).style.display = 'none';
-    
-    // Show target question
-    document.getElementById('question-' + questionNumber).style.display = 'block';
-    
-    // Update palette - remove current from all, add to target
-    document.querySelectorAll('.palette-rectangle').forEach(rect => {
-        rect.classList.remove('current');
-    });
-    document.querySelector(`[data-question-number="${questionNumber}"]`).classList.add('current');
-    
-    currentQuestion = questionNumber;
-    updateNavigationButtons();
-}
-
-function previousQuestion() {
-    if (currentQuestion > 1) {
-        navigateToQuestion(currentQuestion - 1);
-    }
-}
-
-function nextQuestion() {
-    if (currentQuestion < totalQuestions) {
-        navigateToQuestion(currentQuestion + 1);
-    }
-}
-
-function updateNavigationButtons() {
-    document.getElementById('prevBtn').disabled = (currentQuestion === 1);
-    document.getElementById('nextBtn').disabled = (currentQuestion === totalQuestions);
-}
-
-// Answer saving
-function saveAnswer(questionId, choiceId) {
-    fetch('/Exam/SaveAnswer', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-        },
-        body: `studentExamId=${studentExamId}&questionId=${questionId}&choiceId=${choiceId}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update palette to show answered
-            let paletteRect = document.querySelector(`[data-question-id="${questionId}"]`);
-            paletteRect.classList.remove('unanswered');
-            paletteRect.classList.add('answered');
-        }
-    })
-    .catch(error => console.error('Error saving answer:', error));
-}
-
-// Flag functionality
-function toggleFlag(questionId, button) {
-    let isFlagged = button.getAttribute('data-flagged') === 'true';
-    let newFlagState = !isFlagged;
-    
-    fetch('/Exam/ToggleFlag', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-        },
-        body: `studentExamId=${studentExamId}&questionId=${questionId}&isFlagged=${newFlagState}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update button
-            button.setAttribute('data-flagged', newFlagState.toString());
-            button.querySelector('span').textContent = newFlagState ? 'Unflag' : 'Flag';
+        // Timer functionality
+        function updateTimer() {
+            if (remainingSeconds <= 0) {
+                autoSubmitExam();
+                return;
+            }
             
-            // Update palette
-            let paletteRect = document.querySelector(`[data-question-id="${questionId}"]`);
-            if (newFlagState) {
-                paletteRect.classList.add('flagged');
-            } else {
-                paletteRect.classList.remove('flagged');
+            let minutes = Math.floor(remainingSeconds / 60);
+            let seconds = remainingSeconds % 60;
+            document.getElementById('timer').textContent = 
+                minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+            
+            remainingSeconds--;
+        }
+
+        // Start timer
+        setInterval(updateTimer, 1000);
+
+        // Navigation functions
+        function navigateToQuestion(questionNumber) {
+            if (questionNumber < 1 || questionNumber > totalQuestions) return;
+            
+            // Hide current question
+            document.getElementById('question-' + currentQuestion).style.display = 'none';
+            
+            // Show target question
+            document.getElementById('question-' + questionNumber).style.display = 'block';
+            
+            // Update palette - remove current from all, add to target
+            document.querySelectorAll('.palette-btn').forEach(btn => {
+                btn.classList.remove('current');
+            });
+            document.querySelector(`[data-question-number="${questionNumber}"]`).classList.add('current');
+            
+            currentQuestion = questionNumber;
+            updateNavigationButtons();
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                navigateToQuestion(currentQuestion - 1);
             }
         }
-    })
-    .catch(error => console.error('Error toggling flag:', error));
-}
 
-// Submission functions
-function submitExam() {
-    updateSubmissionSummary();
-    $('#submitModal').modal('show');
-}
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                navigateToQuestion(currentQuestion + 1);
+            }
+        }
 
-function updateSubmissionSummary() {
-    let answered = document.querySelectorAll('.palette-rectangle.answered').length;
-    let flagged = document.querySelectorAll('.palette-rectangle.flagged').length;
-    let unanswered = totalQuestions - answered;
-    
-    document.getElementById('answeredCount').textContent = answered;
-    document.getElementById('unansweredCount').textContent = unanswered;
-    document.getElementById('flaggedCount').textContent = flagged;
-}
+        function updateNavigationButtons() {
+            document.getElementById('prevBtn').disabled = (currentQuestion === 1);
+            document.getElementById('nextBtn').disabled = (currentQuestion === totalQuestions);
+        }
 
-function confirmSubmit() {
-    // Create form to submit exam
-    let form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/Exam/Submit';
-    
-    // Add student exam ID
-    let examIdInput = document.createElement('input');
-    examIdInput.type = 'hidden';
-    examIdInput.name = 'studentExamId';
-    examIdInput.value = studentExamId;
-    form.appendChild(examIdInput);
-    
-    // Add anti-forgery token
-    let tokenInput = document.createElement('input');
-    tokenInput.type = 'hidden';
-    tokenInput.name = '__RequestVerificationToken';
-    tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
-    form.appendChild(tokenInput);
-    
-    // Submit form
-    document.body.appendChild(form);
-    form.submit();
-}
+        // Answer saving
+        function saveAnswer(questionId, choiceId) {
+            fetch('/Exam/SaveAnswer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `studentExamId=${studentExamId}&questionId=${questionId}&choiceId=${choiceId}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update palette to show answered
+                    let paletteBtn = document.querySelector(`[data-question-id="${questionId}"]`);
+                    paletteBtn.classList.remove('unanswered');
+                    paletteBtn.classList.add('answered');
+                }
+            })
+            .catch(error => console.error('Error saving answer:', error));
+        }
 
-function autoSubmitExam() {
-    alert('Time is up! Your exam will be automatically submitted.');
-    confirmSubmit();
-}
+        // Flag functionality
+        function toggleFlag(questionId, button) {
+            let isFlagged = button.getAttribute('data-flagged') === 'true';
+            let newFlagState = !isFlagged;
+            
+            fetch('/Exam/ToggleFlag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `studentExamId=${studentExamId}&questionId=${questionId}&isFlagged=${newFlagState}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update button
+                    button.setAttribute('data-flagged', newFlagState.toString());
+                    button.textContent = newFlagState ? 'Remove Flag' : 'Flag';
+                    
+                    // Update palette
+                    let paletteBtn = document.querySelector(`[data-question-id="${questionId}"]`);
+                    if (newFlagState) {
+                        paletteBtn.classList.add('flagged');
+                    } else {
+                        paletteBtn.classList.remove('flagged');
+                    }
+                }
+            })
+            .catch(error => console.error('Error toggling flag:', error));
+        }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    updateNavigationButtons();
-});
-</script>
+        // Submit confirmation functions
+        function showSubmitConfirmation() {
+            updateSubmissionStats();
+            document.getElementById('submitConfirmation').style.display = 'block';
+        }
 
-<style>
-/* Exam Container */
-.exam-container {
-    padding: 20px 0;
-    min-height: 100vh;
-}
+        function hideSubmitConfirmation() {
+            document.getElementById('submitConfirmation').style.display = 'none';
+        }
 
-/* Header */
-.exam-header {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
+        function updateSubmissionStats() {
+            let answered = document.querySelectorAll('.palette-btn.answered').length;
+            let flagged = document.querySelectorAll('.palette-btn.flagged').length;
+            let unanswered = totalQuestions - answered;
+            
+            document.getElementById('answeredCount').textContent = answered;
+            document.getElementById('unansweredCount').textContent = unanswered;
+            document.getElementById('flaggedCount').textContent = flagged;
+        }
 
-.timer-display {
-    font-size: 1.5em;
-    font-weight: bold;
-    color: #dc3545;
-}
+        function confirmSubmit() {
+            // Create form to submit exam
+            let form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Exam/Submit';
+            
+            // Add student exam ID
+            let examIdInput = document.createElement('input');
+            examIdInput.type = 'hidden';
+            examIdInput.name = 'studentExamId';
+            examIdInput.value = studentExamId;
+            form.appendChild(examIdInput);
+            
+            // Add anti-forgery token
+            let tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            form.appendChild(tokenInput);
+            
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+        }
 
-/* Question Palette - LEFT SIDE */
-.question-palette {
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
-    padding: 15px;
-    position: sticky;
-    top: 20px;
-}
+        function autoSubmitExam() {
+            alert('Time is up! Your exam will be automatically submitted.');
+            confirmSubmit();
+        }
 
-.palette-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 15px;
-}
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNavigationButtons();
+        });
+    </script>
 
-/* RECTANGLE DESIGN - STRICT REQUIREMENTS */
-.palette-rectangle {
-    width: 50px;
-    height: 50px;
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    background: white;
-    transition: all 0.2s ease;
-}
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* Question number in TOP HALF */
-.palette-rectangle .question-number {
-    font-weight: bold;
-    font-size: 14px;
-    color: #333;
-    margin-top: 8px;
-    line-height: 1;
-}
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
 
-/* STATUS INDICATORS - EXACT REQUIREMENTS */
+        /* Exam Header */
+        .exam-header {
+            background: #fff;
+            border-bottom: 2px solid #ddd;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 60px;
+        }
 
-/* ⬜ UNANSWERED - White rectangle */
-.palette-rectangle.unanswered {
-    background: white;
-    border-color: #dee2e6;
-}
+        .exam-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
 
-/* ⬛ ANSWERED - Rectangle split half white / half gray */
-.palette-rectangle.answered {
-    background: linear-gradient(to bottom, white 50%, #6c757d 50%);
-    border-color: #6c757d;
-}
+        .exam-timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d32f2f;
+            background: #fff3cd;
+            padding: 8px 15px;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+        }
 
-/* 🔵 CURRENT - Blue border around rectangle */
-.palette-rectangle.current {
-    border-color: #007bff;
-    border-width: 3px;
-    box-shadow: 0 0 0 1px #007bff;
-}
+        /* Main Container */
+        .exam-container {
+            display: flex;
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+        }
 
-/* 🔺 FLAGGED - Red triangle overlay (top corner) */
-.palette-rectangle.flagged::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 0;
-    height: 0;
-    border-left: 12px solid transparent;
-    border-right: 12px solid #dc3545;
-    border-bottom: 12px solid transparent;
-    border-top: 12px solid #dc3545;
-    z-index: 10;
-}
+        /* LEFT COLUMN: Question Palette */
+        .question-palette-column {
+            width: 300px;
+            background: #fff;
+            border-right: 2px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+        }
 
-/* Small rectangles for legend */
-.palette-rectangle.small {
-    width: 25px;
-    height: 25px;
-}
+        /* Question Palette Grid - EXACTLY 5 per row */
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            margin-bottom: 20px;
+        }
 
-.palette-rectangle.small .question-number {
-    font-size: 10px;
-    margin-top: 4px;
-}
+        /* Palette Buttons - Rectangular, tight spacing */
+        .palette-btn {
+            width: 45px;
+            height: 35px;
+            border: 2px solid #ccc;
+            background: white;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 0;
+            font-size: 12px;
+            font-weight: bold;
+        }
 
-.palette-rectangle.small.flagged::after {
-    border-left: 6px solid transparent;
-    border-right: 6px solid #dc3545;
-    border-bottom: 6px solid transparent;
-    border-top: 6px solid #dc3545;
-}
+        .palette-btn:hover {
+            border-color: #999;
+        }
 
-/* Legend */
-.legend-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-    font-size: 0.9em;
-}
+        .palette-btn .question-number {
+            margin-top: 4px;
+            color: #333;
+        }
 
-.legend-item .palette-rectangle {
-    margin-right: 10px;
-    flex-shrink: 0;
-}
+        /* Palette States */
+        .palette-btn.unanswered {
+            background: white;
+            border-color: #ccc;
+        }
 
-/* SINGLE QUESTION DISPLAY - CENTERED */
-.single-question-area {
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
-    padding: 30px;
-    min-height: 600px;
-}
+        .palette-btn.answered {
+            background: linear-gradient(to bottom, white 50%, #6c757d 50%);
+            border-color: #6c757d;
+        }
 
-.single-question-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
+        .palette-btn.current {
+            border-color: #007bff;
+            border-width: 3px;
+        }
 
-/* Question Header - Centered */
-.question-header-centered {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #dee2e6;
-}
+        .palette-btn.flagged::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid #dc3545;
+            border-bottom: 8px solid transparent;
+            border-top: 8px solid #dc3545;
+        }
 
-.question-info {
-    display: inline-flex;
-    align-items: center;
-    gap: 20px;
-}
+        /* After submission states */
+        .palette-btn.correct {
+            background: linear-gradient(to bottom, white 50%, #28a745 50%);
+            border-color: #28a745;
+        }
 
-.question-info h4 {
-    margin: 0;
-    color: #333;
-}
+        .palette-btn.incorrect {
+            background: linear-gradient(to bottom, white 50%, #dc3545 50%);
+            border-color: #dc3545;
+        }
 
-/* CENTERED QUESTION CONTENT */
-.centered-question-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto;
-}
+        /* CENTER COLUMN: Question Content */
+        .question-content-column {
+            flex: 1;
+            background: #fff;
+            padding: 30px;
+            overflow-y: auto;
+        }
 
-/* Question Text - CENTERED */
-.question-text-centered {
-    font-size: 1.3em;
-    font-weight: 500;
-    line-height: 1.6;
-    margin-bottom: 40px;
-    color: #333;
-    text-align: center;
-}
+        .question-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-/* Answer Choices - CENTERED */
-.choices-container-centered {
-    width: 100%;
-    max-width: 600px;
-}
+        /* Question Text */
+        .question-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #333;
+        }
 
-.choice-item-centered {
-    margin-bottom: 20px;
-    padding: 15px 20px;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: white;
-}
+        /* Answer Choices */
+        .choices-container {
+            margin-bottom: 20px;
+        }
 
-.choice-item-centered:hover {
-    background: #f8f9fa;
-    border-color: #007bff;
-}
+        .choice-item {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-.choice-item-centered:has(input:checked) {
-    background: #e3f2fd;
-    border-color: #007bff;
-    box-shadow: 0 2px 4px rgba(0,123,255,0.1);
-}
+        .choice-item:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
 
-.choice-label-centered {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin: 0;
-    width: 100%;
-    font-size: 1.1em;
-}
+        .choice-item:has(input:checked) {
+            background: #e3f2fd;
+            border-color: #007bff;
+        }
 
-.choice-label-centered input[type="radio"] {
-    margin-right: 15px;
-    transform: scale(1.2);
-}
+        .choice-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            width: 100%;
+            font-size: 16px;
+        }
 
-.choice-text {
-    flex: 1;
-    text-align: left;
-}
+        .choice-label input[type="radio"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
 
-/* Navigation */
-.exam-navigation {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 5px;
-    margin-top: 30px;
-    text-align: center;
-}
+        .choice-text {
+            flex: 1;
+        }
 
-.nav-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 600px;
-    margin: 0 auto;
-}
+        /* Navigation Buttons - TIGHT spacing */
+        .navigation-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
-.nav-buttons .btn {
-    min-width: 120px;
-}
+        .nav-btn {
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            background: #f8f9fa;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
 
-/* Submission Summary */
-.submission-summary {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    margin: 15px 0;
-}
+        .nav-btn:hover {
+            background: #e9ecef;
+        }
 
-/* Responsive Design */
-@@media (max-width: 768px) {
-    .palette-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .palette-rectangle {
-        width: 45px;
-        height: 45px;
-    }
-    
-    .question-info {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .nav-buttons {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .nav-buttons .btn {
-        width: 100%;
-    }
-}
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
-@@media (max-width: 576px) {
-    .palette-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .single-question-area {
-        padding: 20px;
-    }
-    
-    .question-text-centered {
-        font-size: 1.1em;
-    }
-    
-    .choice-label-centered {
-        font-size: 1em;
-    }
-}
-</style>
+        .submit-btn {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .submit-btn:hover {
+            background: #218838;
+        }
+
+        /* Flag Button - Bottom left, below navigation */
+        .flag-button-container {
+            text-align: left;
+            margin-top: 5px;
+        }
+
+        .flag-btn {
+            padding: 8px 15px;
+            border: 1px solid #ffc107;
+            background: #fff3cd;
+            color: #856404;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .flag-btn:hover {
+            background: #ffeaa7;
+        }
+
+        /* Submit Confirmation Panel - BOTTOM of page */
+        .submit-confirmation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 3px solid #007bff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+
+        .confirmation-content {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .submission-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .submission-stats p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .warning-text {
+            color: #856404;
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .cancel-btn {
+            padding: 10px 25px;
+            border: 1px solid #6c757d;
+            background: #f8f9fa;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .confirm-submit-btn {
+            padding: 10px 25px;
+            border: 1px solid #28a745;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .cancel-btn:hover {
+            background: #e9ecef;
+        }
+
+        .confirm-submit-btn:hover {
+            background: #218838;
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .question-palette-column {
+                width: 250px;
+            }
+            
+            .palette-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .palette-btn {
+                width: 40px;
+                height: 30px;
+                font-size: 11px;
+            }
+            
+            .question-content-column {
+                padding: 20px;
+            }
+            
+            .question-text {
+                font-size: 16px;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .exam-container {
+                flex-direction: column;
+            }
+            
+            .question-palette-column {
+                width: 100%;
+                height: 120px;
+                padding: 10px;
+            }
+            
+            .palette-grid {
+                grid-template-columns: repeat(8, 1fr);
+            }
+            
+            .palette-btn {
+                width: 35px;
+                height: 25px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</body>
+</html>
